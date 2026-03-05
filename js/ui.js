@@ -8,120 +8,121 @@
 
 const UI = (() => {
 
-    const COLORS = 6;
+  const COLORS = 6;
+  let _stickyCleanup = null; // cleanup fn for sticky header
 
-    // ─── Format helpers ────────────────────────
-    function fmt(val, suffix = '') {
-        if (val === null || val === undefined || val === '' || isNaN(Number(val))) return null;
-        return Number(val).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + suffix;
+  // ─── Format helpers ────────────────────────
+  function fmt(val, suffix = '') {
+    if (val === null || val === undefined || val === '' || isNaN(Number(val))) return null;
+    return Number(val).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + suffix;
+  }
+  function fmtEur(val) { return fmt(val, ' €'); }
+  function fmtPct(val) { return fmt(val, ' %'); }
+
+  function colorGradient(idx) {
+    const colors = [
+      'linear-gradient(135deg,#3b82f6,#8b5cf6)',
+      'linear-gradient(135deg,#10b981,#06b6d4)',
+      'linear-gradient(135deg,#f59e0b,#ef4444)',
+      'linear-gradient(135deg,#ec4899,#8b5cf6)',
+      'linear-gradient(135deg,#06b6d4,#3b82f6)',
+      'linear-gradient(135deg,#84cc16,#10b981)',
+    ];
+    return colors[idx % colors.length];
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ─── Toast ─────────────────────────────────
+  function showToast(msg, type = 'info') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast show ${type}`;
+    clearTimeout(el._toastTimer);
+    el._toastTimer = setTimeout(() => { el.className = 'toast'; }, 2800);
+  }
+
+  // ─── Sync status indicator ──────────────────
+  function setSyncStatus(status) {
+    // status: 'idle' | 'syncing' | 'synced' | 'error' | 'offline'
+    const el = document.getElementById('sync-status');
+    if (!el) return;
+    const labels = {
+      idle: { icon: '⚪', text: 'Local', cls: 'sync-idle' },
+      syncing: { icon: '🔄', text: 'Sincronizando…', cls: 'sync-syncing' },
+      synced: { icon: '🟢', text: 'Sincronizado', cls: 'sync-synced' },
+      error: { icon: '🔴', text: 'Error sync', cls: 'sync-error' },
+      offline: { icon: '🟡', text: 'Sin Gist', cls: 'sync-offline' },
+    };
+    const s = labels[status] || labels.idle;
+    el.className = `sync-status ${s.cls}`;
+    el.innerHTML = `<span class="sync-icon">${s.icon}</span><span class="sync-text">${s.text}</span>`;
+  }
+
+  // ─── Conditions summary ─────────────────────
+  function applyConditionsToUI(conditions) {
+    if (!conditions) return;
+    const { importe, inmueble, plazo, euribor } = conditions;
+    const pct = inmueble ? ((importe / inmueble) * 100).toFixed(1) + ' %' : '—';
+    const $ = (id) => document.getElementById(id);
+    $('sum-importe').textContent = fmtEur(importe) || '—';
+    $('sum-inmueble').textContent = fmtEur(inmueble) || '—';
+    $('sum-financiacion').textContent = pct;
+    $('sum-plazo').textContent = plazo ? plazo + ' años' : '—';
+    $('sum-euribor').textContent = euribor ? euribor + ' %' : '—';
+    $('conditions-summary').style.display = 'flex';
+    $('importe').value = importe || '';
+    $('valor-inmueble').value = inmueble || '';
+    $('plazo').value = plazo || '';
+    $('euribor').value = euribor || '';
+    document.querySelectorAll('[id^="plazo-label-"]').forEach(el => {
+      el.textContent = plazo;
+    });
+  }
+
+  // ─── Gastos total live ──────────────────────
+  function updateGastosTotal() {
+    const ids = ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd'];
+    const total = ids.reduce((s, id) => s + (parseFloat(document.getElementById(id)?.value) || 0), 0);
+    const el = document.getElementById('total-gastos-val');
+    if (el) el.textContent = total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+
+  // ─── Banks Grid ─────────────────────────────
+  function renderBanksGrid(banks, onEdit, onDelete) {
+    const grid = document.getElementById('banks-grid');
+    const empty = document.getElementById('empty-state');
+
+    if (!banks || banks.length === 0) {
+      grid.innerHTML = '';
+      grid.appendChild(empty);
+      return;
     }
-    function fmtEur(val) { return fmt(val, ' €'); }
-    function fmtPct(val) { return fmt(val, ' %'); }
 
-    function colorGradient(idx) {
-        const colors = [
-            'linear-gradient(135deg,#3b82f6,#8b5cf6)',
-            'linear-gradient(135deg,#10b981,#06b6d4)',
-            'linear-gradient(135deg,#f59e0b,#ef4444)',
-            'linear-gradient(135deg,#ec4899,#8b5cf6)',
-            'linear-gradient(135deg,#06b6d4,#3b82f6)',
-            'linear-gradient(135deg,#84cc16,#10b981)',
-        ];
-        return colors[idx % colors.length];
-    }
+    grid.innerHTML = banks.map((b, i) => {
+      const initials = b.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      const interesFijaBon = b.fijaBon?.interes ? fmtPct(b.fijaBon.interes) : null;
+      const cuotaFijaBon = b.fijaBon?.cuota ? fmtEur(b.fijaBon.cuota) : null;
+      const totalFijaBon = b.fijaBon?.total ? fmtEur(b.fijaBon.total) : null;
+      const gastos = b.gastos;
+      const totalGastos = gastos
+        ? [gastos.tasacion, gastos.registro, gastos.notaria, gastos.gestoria, gastos.ajd]
+          .reduce((s, v) => s + (parseFloat(v) || 0), 0)
+        : 0;
+      const bonActivas = [];
+      if (b.bonificaciones?.nominaActiva) bonActivas.push('Nómina');
+      if (b.bonificaciones?.vidaActiva) bonActivas.push('Seg. Vida');
+      if (b.bonificaciones?.hogarActiva) bonActivas.push('Seg. Hogar');
+      if (b.bonificaciones?.tarjetaActiva) bonActivas.push('Tarjeta');
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
-
-    // ─── Toast ─────────────────────────────────
-    function showToast(msg, type = 'info') {
-        const el = document.getElementById('toast');
-        el.textContent = msg;
-        el.className = `toast show ${type}`;
-        clearTimeout(el._toastTimer);
-        el._toastTimer = setTimeout(() => { el.className = 'toast'; }, 2800);
-    }
-
-    // ─── Sync status indicator ──────────────────
-    function setSyncStatus(status) {
-        // status: 'idle' | 'syncing' | 'synced' | 'error' | 'offline'
-        const el = document.getElementById('sync-status');
-        if (!el) return;
-        const labels = {
-            idle: { icon: '⚪', text: 'Local', cls: 'sync-idle' },
-            syncing: { icon: '🔄', text: 'Sincronizando…', cls: 'sync-syncing' },
-            synced: { icon: '🟢', text: 'Sincronizado', cls: 'sync-synced' },
-            error: { icon: '🔴', text: 'Error sync', cls: 'sync-error' },
-            offline: { icon: '🟡', text: 'Sin Gist', cls: 'sync-offline' },
-        };
-        const s = labels[status] || labels.idle;
-        el.className = `sync-status ${s.cls}`;
-        el.innerHTML = `<span class="sync-icon">${s.icon}</span><span class="sync-text">${s.text}</span>`;
-    }
-
-    // ─── Conditions summary ─────────────────────
-    function applyConditionsToUI(conditions) {
-        if (!conditions) return;
-        const { importe, inmueble, plazo, euribor } = conditions;
-        const pct = inmueble ? ((importe / inmueble) * 100).toFixed(1) + ' %' : '—';
-        const $ = (id) => document.getElementById(id);
-        $('sum-importe').textContent = fmtEur(importe) || '—';
-        $('sum-inmueble').textContent = fmtEur(inmueble) || '—';
-        $('sum-financiacion').textContent = pct;
-        $('sum-plazo').textContent = plazo ? plazo + ' años' : '—';
-        $('sum-euribor').textContent = euribor ? euribor + ' %' : '—';
-        $('conditions-summary').style.display = 'flex';
-        $('importe').value = importe || '';
-        $('valor-inmueble').value = inmueble || '';
-        $('plazo').value = plazo || '';
-        $('euribor').value = euribor || '';
-        document.querySelectorAll('[id^="plazo-label-"]').forEach(el => {
-            el.textContent = plazo;
-        });
-    }
-
-    // ─── Gastos total live ──────────────────────
-    function updateGastosTotal() {
-        const ids = ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd'];
-        const total = ids.reduce((s, id) => s + (parseFloat(document.getElementById(id)?.value) || 0), 0);
-        const el = document.getElementById('total-gastos-val');
-        if (el) el.textContent = total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-    }
-
-    // ─── Banks Grid ─────────────────────────────
-    function renderBanksGrid(banks, onEdit, onDelete) {
-        const grid = document.getElementById('banks-grid');
-        const empty = document.getElementById('empty-state');
-
-        if (!banks || banks.length === 0) {
-            grid.innerHTML = '';
-            grid.appendChild(empty);
-            return;
-        }
-
-        grid.innerHTML = banks.map((b, i) => {
-            const initials = b.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-            const interesFijaBon = b.fijaBon?.interes ? fmtPct(b.fijaBon.interes) : null;
-            const cuotaFijaBon = b.fijaBon?.cuota ? fmtEur(b.fijaBon.cuota) : null;
-            const totalFijaBon = b.fijaBon?.total ? fmtEur(b.fijaBon.total) : null;
-            const gastos = b.gastos;
-            const totalGastos = gastos
-                ? [gastos.tasacion, gastos.registro, gastos.notaria, gastos.gestoria, gastos.ajd]
-                    .reduce((s, v) => s + (parseFloat(v) || 0), 0)
-                : 0;
-            const bonActivas = [];
-            if (b.bonificaciones?.nominaActiva) bonActivas.push('Nómina');
-            if (b.bonificaciones?.vidaActiva) bonActivas.push('Seg. Vida');
-            if (b.bonificaciones?.hogarActiva) bonActivas.push('Seg. Hogar');
-            if (b.bonificaciones?.tarjetaActiva) bonActivas.push('Tarjeta');
-
-            return `
+      return `
         <div class="bank-card" data-color="${b.color}">
           <div class="bank-card-header">
             <div class="bank-avatar" data-color="${b.color}">${initials}</div>
@@ -159,61 +160,61 @@ const UI = (() => {
             ${b.mixtaBon?.total ? '<span class="bank-tag tag-purple">Hipoteca mixta</span>' : ''}
           </div>
         </div>`;
-        }).join('');
+    }).join('');
+  }
+
+  // ─── Compare Table ──────────────────────────
+  function renderCompareTable(banks, conditions) {
+    const section = document.getElementById('section-compare');
+    const wrapper = document.getElementById('compare-wrapper');
+    if (!banks || banks.length < 1) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    const plazo = conditions?.plazo || '—';
+
+    function bestMin(getter) {
+      const vals = banks.map(b => parseFloat(getter(b)));
+      const valid = vals.filter(v => !isNaN(v));
+      if (valid.length < 2) return -1;
+      return vals.findIndex(v => v === Math.min(...valid));
     }
-
-    // ─── Compare Table ──────────────────────────
-    function renderCompareTable(banks, conditions) {
-        const section = document.getElementById('section-compare');
-        const wrapper = document.getElementById('compare-wrapper');
-        if (!banks || banks.length < 1) { section.style.display = 'none'; return; }
-        section.style.display = 'block';
-        const plazo = conditions?.plazo || '—';
-
-        function bestMin(getter) {
-            const vals = banks.map(b => parseFloat(getter(b)));
-            const valid = vals.filter(v => !isNaN(v));
-            if (valid.length < 2) return -1;
-            return vals.findIndex(v => v === Math.min(...valid));
+    function worstMax(getter) {
+      const vals = banks.map(b => parseFloat(getter(b)));
+      const valid = vals.filter(v => !isNaN(v));
+      if (valid.length < 2) return -1;
+      return vals.findIndex(v => v === Math.max(...valid));
+    }
+    function row(label, getter, fmtFn, bestFn, worstFn) {
+      const cells = banks.map((b, i) => {
+        const raw = getter(b);
+        const val = raw !== null && raw !== undefined && raw !== '' ? raw : null;
+        let cls = '';
+        if (val !== null) {
+          if (bestFn && bestFn(getter) === i) cls = 'best';
+          else if (worstFn && worstFn(getter) === i) cls = 'worst';
         }
-        function worstMax(getter) {
-            const vals = banks.map(b => parseFloat(getter(b)));
-            const valid = vals.filter(v => !isNaN(v));
-            if (valid.length < 2) return -1;
-            return vals.findIndex(v => v === Math.max(...valid));
-        }
-        function row(label, getter, fmtFn, bestFn, worstFn) {
-            const cells = banks.map((b, i) => {
-                const raw = getter(b);
-                const val = raw !== null && raw !== undefined && raw !== '' ? raw : null;
-                let cls = '';
-                if (val !== null) {
-                    if (bestFn && bestFn(getter) === i) cls = 'best';
-                    else if (worstFn && worstFn(getter) === i) cls = 'worst';
-                }
-                return `<td class="${cls}">${val !== null ? (fmtFn ? fmtFn(val) : val) : '<span class="no-val">—</span>'}</td>`;
-            }).join('');
-            return `<tr><td>${label}</td>${cells}</tr>`;
-        }
-        function sectionRow(label, cls = '') {
-            return `<tr class="section-row ${cls}"><td colspan="${banks.length + 1}">${label}</td></tr>`;
-        }
-        function totalGastos(b) {
-            const g = b.gastos; if (!g) return null;
-            const t = [g.tasacion, g.registro, g.notaria, g.gestoria, g.ajd]
-                .reduce((s, v) => s + (parseFloat(v) || 0), 0);
-            return t > 0 ? t : null;
-        }
-        const headers = banks.map(b =>
-            `<th data-color="${b.color}">
+        return `<td class="${cls}">${val !== null ? (fmtFn ? fmtFn(val) : val) : '<span class="no-val">—</span>'}</td>`;
+      }).join('');
+      return `<tr><td>${label}</td>${cells}</tr>`;
+    }
+    function sectionRow(label, cls = '') {
+      return `<tr class="section-row ${cls}"><td colspan="${banks.length + 1}">${label}</td></tr>`;
+    }
+    function totalGastos(b) {
+      const g = b.gastos; if (!g) return null;
+      const t = [g.tasacion, g.registro, g.notaria, g.gestoria, g.ajd]
+        .reduce((s, v) => s + (parseFloat(v) || 0), 0);
+      return t > 0 ? t : null;
+    }
+    const headers = banks.map(b =>
+      `<th data-color="${b.color}">
         <div style="display:flex;align-items:center;gap:0.5rem;">
           <span style="width:10px;height:10px;border-radius:50%;display:inline-block;background:${colorGradient(b.color)};"></span>
           ${escapeHtml(b.name)}
         </div>
       </th>`
-        ).join('');
+    ).join('');
 
-        wrapper.innerHTML = `
+    wrapper.innerHTML = `
       <table class="compare-table">
         <thead><tr><th>Campo</th>${headers}</tr></thead>
         <tbody>
@@ -267,16 +268,75 @@ const UI = (() => {
           ${row('Coste tarjeta (€/año)', b => b.bonificaciones?.tarjetaActiva ? b.bonificaciones.tarjetaCoste : null, fmtEur, bestMin, worstMax)}
         </tbody>
       </table>`;
+
+    // ─── Sticky clone header ─────────────────
+    if (_stickyCleanup) { _stickyCleanup(); _stickyCleanup = null; }
+    _stickyCleanup = _initStickyHeader(wrapper);
+  }
+
+  function _initStickyHeader(wrapper) {
+    const table = wrapper.querySelector('.compare-table');
+    if (!table) return null;
+    const thead = table.querySelector('thead');
+    if (!thead) return null;
+
+    // Build the fixed clone bar
+    const bar = document.createElement('div');
+    bar.className = 'sticky-col-header';
+    const innerTable = document.createElement('table');
+    innerTable.className = 'compare-table';
+    innerTable.style.tableLayout = 'fixed';
+    innerTable.style.width = '100%';
+    innerTable.appendChild(thead.cloneNode(true));
+    bar.appendChild(innerTable);
+    document.body.appendChild(bar);
+
+    const NAVBAR_H = 64;
+
+    function syncAndShow() {
+      const realThs = thead.querySelectorAll('th');
+      const cloneThs = bar.querySelectorAll('th');
+      const tableRect = table.getBoundingClientRect();
+      realThs.forEach((th, i) => {
+        if (cloneThs[i]) cloneThs[i].style.width = th.getBoundingClientRect().width + 'px';
+      });
+      bar.style.paddingLeft = Math.max(0, tableRect.left) + 'px';
+      bar.style.paddingRight = Math.max(0, window.innerWidth - tableRect.right) + 'px';
+      bar.classList.add('visible');
     }
 
-    return {
-        showToast,
-        setSyncStatus,
-        applyConditionsToUI,
-        updateGastosTotal,
-        renderBanksGrid,
-        renderCompareTable,
-        fmtEur, fmtPct,
-        escapeHtml,
+    function hide() { bar.classList.remove('visible'); }
+
+    function onScroll() {
+      // Show when the bottom edge of the real thead has gone above the navbar
+      if (thead.getBoundingClientRect().bottom <= NAVBAR_H) {
+        syncAndShow();
+      } else {
+        hide();
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+
+    // Initial check (in case page loads already scrolled)
+    onScroll();
+
+    return function cleanup() {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      bar.remove();
     };
+  }
+
+  return {
+    showToast,
+    setSyncStatus,
+    applyConditionsToUI,
+    updateGastosTotal,
+    renderBanksGrid,
+    renderCompareTable,
+    fmtEur, fmtPct,
+    escapeHtml,
+  };
 })();
