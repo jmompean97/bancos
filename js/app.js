@@ -298,21 +298,23 @@ const App = (() => {
         const btn = document.getElementById('btn-euribor');
         const input = document.getElementById('euribor');
         const badge = document.getElementById('euribor-badge');
-        const term = document.getElementById('euribor-term')?.value || '12m';
-        const labels = { '1m': '1 mes', '3m': '3 meses', '6m': '6 meses', '12m': '12 meses' };
 
         if (btn) { btn.disabled = true; btn.classList.add('loading'); }
         if (badge) { badge.textContent = 'Consultando BCE…'; badge.className = 'euribor-badge'; }
 
         try {
-            const data = await Euribor.fetch(term);
+            const data = await Euribor.fetch('12m');
             if (!data) throw new Error('Sin datos');
-            input.value = data.value;
+            if (input) {
+                input.disabled = false;
+                input.value = data.value;
+                input.disabled = true;
+            }
             if (badge) {
-                badge.textContent = `Euríbor ${labels[term]}: ${data.value} % · Dato de ${data.period} · Fuente: BCE`;
+                badge.textContent = `Euríbor 12 meses: ${data.value} % · Dato de ${data.period} · Fuente: BCE`;
                 badge.className = 'euribor-badge euribor-badge--ok';
             }
-            UI.showToast(`✓ Euríbor ${labels[term]}: ${data.value} %`, 'success');
+            UI.showToast(`✓ Euríbor 12 meses: ${data.value} %`, 'success');
         } catch (err) {
             if (badge) {
                 badge.textContent = 'No se pudo obtener el dato del BCE';
