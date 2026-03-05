@@ -197,7 +197,9 @@ Distribuido bajo licencia **MIT**. Consulta el archivo [LICENSE](LICENSE) para m
 
 <div align="center">
 
-Hecho con ☕ y muchas horas comparando hipotecas
+&copy; 2024 **[Jorge Mompeán](https://github.com/jmompean97)**. Todos los derechos reservados.
+
+Hecho con ☕ y muchas horas comparando hipotecas para la comunidad.
 
 **[⬆ Volver arriba](#-bancocomp)**
 

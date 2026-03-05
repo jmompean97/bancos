@@ -188,3 +188,27 @@
   color: var(--text-secondary);
   margin-top: 2px;
 }
+
+/* =============================================
+   FOOTER
+   ============================================= */
+.app-footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  margin-top: auto;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
+.app-footer a {
+  color: var(--accent-blue-light);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+  color: #bfdbfe;
+}
