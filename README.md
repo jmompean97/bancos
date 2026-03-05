@@ -28,12 +28,25 @@ Sin registro. Sin servidor. Sin instalar nada. Abre el archivo y listo.
 
 ## 🚀 Demo rápida
 
-> Puedes usar la app directamente abriendo `index.html` en cualquier navegador moderno, o desplegándola en **GitHub Pages** con un solo clic.
+> Puedes usar la app directamente abriendo `index.html` en tu navegador, o sirviéndola desde un servidor local para activar opciones avanzadas (sincronización).
+
+### Opción A — Servidor Local (Recomendado para Gist Sync)
+Si vas a utilizar la opción de sincronización en la nube mediante **GitHub Gist**, por razones de seguridad de tu navegador (políticas CORS), necesitas levantar la app desde un servidor web en lugar de abrir el archivo suelto `file:///`. La forma más rápida si tienes Python en tu ordenador es:
 
 ```bash
 git clone https://github.com/jmompean97/bancos.git
 cd bancos
-# Abre index.html en tu navegador
+python3 -m http.server 8080
+# Abre http://localhost:8080 en tu navegador
+```
+
+### Opción B — Abrir archivo suelto
+Si sólo la vas a usar para guardar tu comparativa de forma local (en tu propio navegador sin utilizar Gist ni sincronizar con la nube):
+
+```bash
+git clone https://github.com/jmompean97/bancos.git
+cd bancos
+# Abre el archivo index.html haciendo doble clic o arrastrándolo a tu navegador
 ```
 
 ---
@@ -197,7 +210,7 @@ Distribuido bajo licencia **MIT**. Consulta el archivo [LICENSE](LICENSE) para m
 
 <div align="center">
 
-&copy; 2024 **[Jorge Mompeán](https://github.com/jmompean97)**. Todos los derechos reservados.
+&copy; 2026 **[Jorge Mompeán](https://github.com/jmompean97)**. Todos los derechos reservados.
 
 Hecho con ☕ y muchas horas comparando hipotecas para la comunidad.
 
