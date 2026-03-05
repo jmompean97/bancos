@@ -31,7 +31,7 @@ Sin registro. Sin servidor. Sin instalar nada. Abre el archivo y listo.
 > Puedes usar la app directamente abriendo `index.html` en cualquier navegador moderno, o desplegándola en **GitHub Pages** con un solo clic.
 
 ```bash
-git clone https://github.com/tu-usuario/bancos.git
+git clone https://github.com/jmompean97/bancos.git
 cd bancos
 # Abre index.html en tu navegador
 ```
@@ -149,7 +149,7 @@ bancos/
 4. Pulsa **Save** — en ~30 segundos tienes tu URL pública
 
 ```
-https://tu-usuario.github.io/bancos/
+https://jmompean97.github.io/bancos/
 ```
 
 > ⚠️ **Nota sobre persistencia en Pages:** IndexedDB funciona correctamente en GitHub Pages, pero los datos se almacenan **localmente en cada navegador**. Si usas la app en otro dispositivo, usa el botón **Exportar** para llevarte los datos y **Importar** en el nuevo.
