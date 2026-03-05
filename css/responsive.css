@@ -1,0 +1,158 @@
+/* =============================================
+   MEDIA QUERIES (100% Responsive)
+   ============================================= */
+
+/* TABLET (max-width: 1024px) */
+@media (max-width: 1024px) {
+    .app-main {
+        padding: 1.5rem;
+    }
+
+    .header-inner {
+        gap: 1rem;
+    }
+
+    .header-actions {
+        gap: 0.25rem;
+    }
+
+    .btn-header {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .btn-header svg {
+        display: none;
+        /* Ocultar iconos en tablet horizontal para ganar espacio */
+    }
+
+    .banks-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+}
+
+/* TABLET VERTICAL / MOBILE LARGE (max-width: 800px) */
+@media (max-width: 800px) {
+    .header-inner {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 1rem 0;
+        justify-content: center;
+    }
+
+    .header-subtitle {
+        display: none;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-header svg {
+        display: block;
+        /* Volver a mostrar si hay espacio al saltar de línea */
+    }
+
+    .conditions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .btn-add {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+    }
+
+    .modal {
+        margin: 1rem;
+        max-width: 100%;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* MOBILE (max-width: 480px) */
+@media (max-width: 480px) {
+    .app-header {
+        padding: 0 1rem;
+    }
+
+    .app-main {
+        padding: 1rem;
+    }
+
+    .section {
+        padding: 1.25rem;
+        border-radius: var(--radius-lg);
+    }
+
+    .conditions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bonif-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .banks-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bank-card {
+        padding: 1rem;
+    }
+
+    .bank-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: 1rem;
+    }
+
+    .tab-nav {
+        flex-direction: column;
+    }
+
+    .tab-btn {
+        width: 100%;
+        text-align: center;
+        font-size: 0.85rem;
+        padding: 0.6rem;
+    }
+
+    .btn-header {
+        flex: 1;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .sync-status {
+        width: 100%;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    .euribor-widget {
+        flex-direction: column;
+    }
+
+    .btn-euribor {
+        width: 100%;
+        padding: 0.5rem;
+    }
+}

@@ -121,8 +121,18 @@ El formato JSON exportado es legible y puede editarse manualmente si es necesari
 bancos/
 │
 ├── index.html      # Estructura HTML completa de la app
-├── style.css       # Diseño dark glassmorphism (variables CSS, componentes)
-├── app.js          # Lógica completa: estado, IndexedDB, renderizado, export/import
+├── css/            # Estilos CSS divididos por dominios
+│   ├── variables.css
+│   ├── layout.css
+│   ├── components.css
+│   ├── modals.css
+│   └── responsive.css
+├── js/             # Lógica JS modularizada
+│   ├── app.js      # Orquestador principal
+│   ├── ui.js       # Renderizado de UI y eventos
+│   ├── db.js       # Capa de almacenamiento en IndexedDB
+│   ├── gist.js     # Cliente API de GitHub Gist
+│   └── euribor.js  # Integración con la API oficial del BCE
 └── README.md       # Este archivo
 ```
 
@@ -158,7 +168,8 @@ https://jmompean97.github.io/bancos/
 
 ## 🔭 Roadmap / Ideas futuras
 
-- [ ] **Sincronización via GitHub Gist** — guarda el JSON en un Gist privado tuyo y sincroniza entre dispositivos automáticamente usando tu Personal Access Token
+- [x] **Sincronización via GitHub Gist** — guarda el JSON en un Gist privado tuyo y sincroniza automáticamente usando tu Personal Access Token
+- [x] **Euríbor en tiempo real** — integración directa con la API oficial del Banco Central Europeo (BCE)
 - [ ] **Modo comparación visual con gráficos** — barras o radar chart para ver rápidamente qué banco gana en cada categoría
 - [ ] **Calculadora de cuota** — calcula la cuota mensual automáticamente dado importe, plazo y tipo de interés
 - [ ] **Ahorro real con bonificaciones** — calcula si compensa contratar cada producto vinculado (reducción de interés vs coste anual del seguro)
