@@ -1,31 +1,32 @@
 /* =============================================
    js/euribor.js — Euríbor en tiempo real
    Fuente: API oficial del BCE (gratis, sin API key)
+   Nota: el BCE solo publica Euribor mensual (promedio del mes)
+         en su API pública. No existe serie diaria en el dataflow FM.
    ============================================= */
 
 'use strict';
 
 const Euribor = (() => {
 
-    // Endpoints BCE para distintos plazos (frecuencia diaria: D)
+    // Endpoints BCE para distintos plazos (frecuencia mensual: M)
+    // El BCE publica el valor promedio del mes. El dato más reciente
+    // disponible suele ser el ultimo mes ya cerrado (con ~1 semana de delay).
     const ENDPOINTS = {
-        '1m': 'FM/D.U2.EUR.RT.MM.EURIBOR1MD_.HSTA',
-        '3m': 'FM/D.U2.EUR.RT.MM.EURIBOR3MD_.HSTA',
-        '6m': 'FM/D.U2.EUR.RT.MM.EURIBOR6MD_.HSTA',
-        '12m': 'FM/D.U2.EUR.RT.MM.EURIBOR1YD_.HSTA',
+        '1m': 'FM/M.U2.EUR.RT.MM.EURIBOR1MD_.HSTA',
+        '3m': 'FM/M.U2.EUR.RT.MM.EURIBOR3MD_.HSTA',
+        '6m': 'FM/M.U2.EUR.RT.MM.EURIBOR6MD_.HSTA',
+        '12m': 'FM/M.U2.EUR.RT.MM.EURIBOR1YD_.HSTA',
     };
     const BASE = 'https://data-api.ecb.europa.eu/service/data';
     const CACHE_KEY = 'euribor-cache';
 
-    // Extrae el valor y el periodo del último dato diario de la respuesta del BCE
+    // Extrae el valor y el periodo de la respuesta del BCE
     function parseResponse(json) {
-        const series = json?.dataSets?.[0]?.series?.['0:0:0:0:0:0:0'];
-        const obs = series?.observations;
-        const periods = json?.structure?.dimensions?.observation?.[0]?.values;
-        if (!obs || !periods) return null;
-        // lastNObservations=1 devuelve la clave '0' con el dato más reciente
+        const obs = json?.dataSets?.[0]?.series?.['0:0:0:0:0:0:0']?.observations;
+        const period = json?.structure?.dimensions?.observation?.[0]?.values?.[0]?.id;
+        if (!obs) return null;
         const value = obs['0']?.[0];
-        const period = periods?.[0]?.id;
         return value !== undefined ? { value: parseFloat(value.toFixed(4)), period } : null;
     }
 

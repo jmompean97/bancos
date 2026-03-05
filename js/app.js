@@ -294,6 +294,14 @@ const App = (() => {
     }
 
     // ─── Euríbor BCE ───────────────────────────
+    // Convierte el período mensual del BCE ("2026-02") en texto legible ("feb 2026")
+    function formatPeriod(period) {
+        if (!period) return '';
+        const [y, m] = period.split('-');
+        if (!y || !m) return period;
+        const mes = new Date(+y, +m - 1, 1).toLocaleDateString('es-ES', { month: 'short' });
+        return `${mes} ${y}`;
+    }
     async function fetchEuribor() {
         const btn = document.getElementById('btn-euribor');
         const input = document.getElementById('euribor');
@@ -311,7 +319,7 @@ const App = (() => {
                 input.disabled = true;
             }
             if (badge) {
-                badge.textContent = `Euríbor 12 meses: ${data.value} % · Dato de ${data.period} · Fuente: BCE`;
+                badge.textContent = `Euríbor 12 meses: ${data.value} % · Media de ${formatPeriod(data.period)} · Fuente: BCE`;
                 badge.className = 'euribor-badge euribor-badge--ok';
             }
             UI.showToast(`✓ Euríbor 12 meses: ${data.value} %`, 'success');
@@ -482,7 +490,7 @@ const App = (() => {
                 if (input && !input.value) {
                     input.value = data['12m'].value;
                     if (badge) {
-                        badge.textContent = `Euríbor 12 meses: ${data['12m'].value} % · Dato de ${data['12m'].period} · Fuente: BCE`;
+                        badge.textContent = `Euríbor 12 meses: ${data['12m'].value} % · Media de ${formatPeriod(data['12m'].period)} · Fuente: BCE`;
                         badge.className = 'euribor-badge euribor-badge--ok';
                     }
                 }
