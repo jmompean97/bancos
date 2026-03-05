@@ -293,6 +293,37 @@ const App = (() => {
         UI.showToast('Datos borrados', 'info');
     }
 
+    // ─── Euríbor BCE ───────────────────────────
+    async function fetchEuribor() {
+        const btn = document.getElementById('btn-euribor');
+        const input = document.getElementById('euribor');
+        const badge = document.getElementById('euribor-badge');
+        const term = document.getElementById('euribor-term')?.value || '12m';
+        const labels = { '1m': '1 mes', '3m': '3 meses', '6m': '6 meses', '12m': '12 meses' };
+
+        if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+        if (badge) { badge.textContent = 'Consultando BCE…'; badge.className = 'euribor-badge'; }
+
+        try {
+            const data = await Euribor.fetch(term);
+            if (!data) throw new Error('Sin datos');
+            input.value = data.value;
+            if (badge) {
+                badge.textContent = `Euríbor ${labels[term]}: ${data.value} % · Dato de ${data.period} · Fuente: BCE`;
+                badge.className = 'euribor-badge euribor-badge--ok';
+            }
+            UI.showToast(`✓ Euríbor ${labels[term]}: ${data.value} %`, 'success');
+        } catch (err) {
+            if (badge) {
+                badge.textContent = 'No se pudo obtener el dato del BCE';
+                badge.className = 'euribor-badge euribor-badge--error';
+            }
+            UI.showToast('Error al obtener Euríbor del BCE', 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+        }
+    }
+
     // ─── Modal Gist Config ───────────────────────
     function openGistModal() {
         // Pre-fill PAT and Gist ID from memory
@@ -441,6 +472,21 @@ const App = (() => {
             if (e.key === 'Escape') { closeBankModal(); closeGistModal(); }
         });
 
+        // Auto-fetch Euríbor al arrancar (con caché de 6h)
+        Euribor.load().then(data => {
+            if (data?.['12m']) {
+                const input = document.getElementById('euribor');
+                const badge = document.getElementById('euribor-badge');
+                if (input && !input.value) {
+                    input.value = data['12m'].value;
+                    if (badge) {
+                        badge.textContent = `Euríbor 12 meses: ${data['12m'].value} % · Dato de ${data['12m'].period} · Fuente: BCE`;
+                        badge.className = 'euribor-badge euribor-badge--ok';
+                    }
+                }
+            }
+        }).catch(() => { });
+
         // Restore UI
         UI.applyConditionsToUI(state.conditions);
         refresh();
@@ -459,6 +505,7 @@ const App = (() => {
         exportJSON, importJSON, resetAll,
         openGistModal, closeGistModal, closeGistModalOnOverlay,
         connectGist, disconnectGist,
+        fetchEuribor,
         init,
     };
 

@@ -1400,3 +1400,85 @@ body {
   text-transform: none;
   letter-spacing: 0;
 }
+
+/* =============================================
+   EURÍBOR WIDGET
+   ============================================= */
+.euribor-widget {
+  display: flex;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.euribor-term {
+  width: auto;
+  min-width: 100px;
+  flex-shrink: 0;
+  background: var(--bg-input);
+  cursor: pointer;
+}
+
+.euribor-widget .form-input {
+  flex: 1;
+}
+
+.btn-euribor {
+  width: 38px;
+  min-width: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: var(--radius-sm);
+  color: var(--accent-blue-light);
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.btn-euribor svg {
+  width: 15px;
+  height: 15px;
+}
+
+.btn-euribor:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.45);
+}
+
+.btn-euribor:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-euribor.loading svg {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.euribor-badge {
+  display: block;
+  font-size: 0.71rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+  min-height: 1em;
+  line-height: 1.5;
+}
+
+.euribor-badge--ok {
+  color: #34d399;
+}
+
+.euribor-badge--error {
+  color: #f87171;
+}
