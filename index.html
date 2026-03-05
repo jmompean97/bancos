@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comparador Hipotecas | BancoComp</title>
+    <meta name="description"
+        content="Compara las condiciones hipotecarias de diferentes bancos de forma visual e intuitiva. Hipotecas fijas, mixtas, gastos y bonificaciones." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 21H21M3 10H21M5 6L12 3L19 6M4 10V21M20 10V21M8 14V17M12 14V17M16 14V17"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <span class="logo-text">BancoComp</span>
+            </div>
+            <p class="header-subtitle">Comparador de hipotecas inteligente</p>
+            <div class="header-actions">
+                <button class="btn btn-header" onclick="importJSON()" title="Importar sesión desde archivo JSON"
+                    id="btn-import">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M21 15V19C21 19.53 20.79 20.04 20.41 20.41C20.04 20.79 19.53 21 19 21H5C4.47 21 3.96 20.79 3.59 20.41C3.21 20.04 3 19.53 3 19V15M17 8L12 3L7 8M12 3V15"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Importar
+                </button>
+                <button class="btn btn-header btn-header-green" onclick="exportJSON()"
+                    title="Exportar sesión a archivo JSON" id="btn-export">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M21 15V19C21 19.53 20.79 20.04 20.41 20.41C20.04 20.79 19.53 21 19 21H5C4.47 21 3.96 20.79 3.59 20.41C3.21 20.04 3 19.53 3 19V15M7 10L12 15L17 10M12 15V3"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Exportar
+                </button>
+                <button class="btn btn-header btn-header-red" onclick="resetAll()" title="Borrar todos los datos"
+                    id="btn-reset">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M3 6H5H21M8 6V4C8 3.47 8.21 2.96 8.59 2.59C8.96 2.21 9.47 2 10 2H14C14.53 2 15.04 2.21 15.41 2.59C15.79 2.96 16 3.47 16 4V6M19 6V20C19 20.53 18.79 21.04 18.41 21.41C18.04 21.79 17.53 22 17 22H7C6.47 22 5.96 21.79 5.59 21.41C5.21 21.04 5 20.53 5 20V6H19Z"
+                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Reset
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main class="app-main">
+
+        <!-- STEP 1: Mortgage Conditions -->
+        <section class="section conditions-section" id="section-conditions">
+            <div class="section-header">
+                <div class="step-badge">1</div>
+                <div>
+                    <h2 class="section-title">Condiciones de la hipoteca</h2>
+                    <p class="section-desc">Introduce los datos generales de tu solicitud hipotecaria</p>
+                </div>
+            </div>
+
+            <div class="conditions-grid">
+                <div class="form-group">
+                    <label class="form-label" for="importe">Importe solicitado (€)</label>
+                    <input class="form-input" type="number" id="importe" placeholder="200.000" min="0" step="1000" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="valor-inmueble">Valor del inmueble (€)</label>
+                    <input class="form-input" type="number" id="valor-inmueble" placeholder="250.000" min="0"
+                        step="1000" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="plazo">Plazo (años)</label>
+                    <input class="form-input" type="number" id="plazo" placeholder="20" min="1" max="40" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="euribor">Euríbor actual (%)</label>
+                    <input class="form-input" type="number" id="euribor" placeholder="3.50" step="0.01" />
+                </div>
+            </div>
+
+            <div class="conditions-summary" id="conditions-summary" style="display:none;">
+                <div class="summary-item">
+                    <span class="summary-label">Importe</span>
+                    <span class="summary-value" id="sum-importe">—</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Valor inmueble</span>
+                    <span class="summary-value" id="sum-inmueble">—</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">% Financiación</span>
+                    <span class="summary-value" id="sum-financiacion">—</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Plazo</span>
+                    <span class="summary-value" id="sum-plazo">—</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Euríbor</span>
+                    <span class="summary-value" id="sum-euribor">—</span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-conditions" onclick="saveConditions()">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                Guardar condiciones
+            </button>
+        </section>
+
+        <!-- STEP 2: Banks -->
+        <section class="section banks-section" id="section-banks">
+            <div class="section-header">
+                <div class="step-badge">2</div>
+                <div>
+                    <h2 class="section-title">Bancos comparados</h2>
+                    <p class="section-desc">Añade los bancos y sus condiciones hipotecarias</p>
+                </div>
+                <button class="btn btn-add" id="btn-add-bank" onclick="openAddBankModal()">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                    Añadir banco
+                </button>
+            </div>
+
+            <!-- Banks cards preview -->
+            <div class="banks-grid" id="banks-grid">
+                <div class="empty-state" id="empty-state">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M3 21H21M3 10H21M5 6L12 3L19 6M4 10V21M20 10V21M8 14V17M12 14V17M16 14V17"
+                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <p class="empty-title">Ningún banco añadido</p>
+                    <p class="empty-desc">Pulsa "Añadir banco" para comenzar la comparativa</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 3: Comparison Table -->
+        <section class="section compare-section" id="section-compare" style="display:none;">
+            <div class="section-header">
+                <div class="step-badge">3</div>
+                <div>
+                    <h2 class="section-title">Tabla comparativa</h2>
+                    <p class="section-desc">Comparativa detallada de condiciones entre bancos</p>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                    <button class="btn btn-outline" onclick="exportJSON()" id="btn-export-table">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M21 15V19C21 19.53 20.79 20.04 20.41 20.41C20.04 20.79 19.53 21 19 21H5C4.47 21 3.96 20.79 3.59 20.41C3.21 20.04 3 19.53 3 19V15M7 10L12 15L17 10M12 15V3"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        JSON
+                    </button>
+                    <button class="btn btn-outline" onclick="window.print()" id="btn-print">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M6 9V2H18V9M6 18H4C3.47 18 2.96 17.79 2.59 17.41C2.21 17.04 2 16.53 2 16V11C2 10.47 2.21 9.96 2.59 9.59C2.96 9.21 3.47 9 4 9H20C20.53 9 21.04 9.21 21.41 9.59C21.79 9.96 22 10.47 22 11V16C22 16.53 21.79 17.04 21.41 17.41C21.04 17.79 20.53 18 20 18H18M6 14H18V22H6V14Z"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Imprimir
+                    </button>
+                </div>
+            </div>
+            <div class="compare-wrapper" id="compare-wrapper">
+                <!-- Dynamically generated -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===== MODAL: Add/Edit Bank ===== -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
+        <div class="modal" id="modal-bank">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Añadir banco</h3>
+                <button class="modal-close" onclick="closeBankModal()" aria-label="Cerrar">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- Bank name -->
+                <div class="form-group">
+                    <label class="form-label" for="bank-name">Nombre del banco *</label>
+                    <input class="form-input" type="text" id="bank-name" placeholder="Ej: CaixaBank, Santander..." />
+                </div>
+
+                <!-- Tabs -->
+                <div class="tab-nav" role="tablist">
+                    <button class="tab-btn active" role="tab" onclick="switchTab('fija')" id="tab-fija">Hipoteca
+                        Fija</button>
+                    <button class="tab-btn" role="tab" onclick="switchTab('mixta')" id="tab-mixta">Hipoteca
+                        Mixta</button>
+                    <button class="tab-btn" role="tab" onclick="switchTab('gastos')" id="tab-gastos">Otros
+                        Gastos</button>
+                    <button class="tab-btn" role="tab" onclick="switchTab('bonificaciones')"
+                        id="tab-bonificaciones">Bonificaciones</button>
+                </div>
+
+                <!-- TAB: Hipoteca Fija -->
+                <div class="tab-panel active" id="panel-fija">
+                    <!-- Bonificada -->
+                    <div class="panel-subheader">
+                        <span class="badge badge-green">Bonificada</span>
+                        <span class="panel-subheader-label">Hipoteca Fija — <span id="plazo-label-1">20</span>
+                            años</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">% Interés</label>
+                            <input class="form-input" type="number" step="0.01" id="fija-bon-interes"
+                                placeholder="2.50" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cuota mensual (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="fija-bon-cuota" placeholder="900" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Total a pagar (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="fija-bon-total"
+                                placeholder="216.000" />
+                        </div>
+                    </div>
+                    <!-- No Bonificada -->
+                    <div class="panel-subheader">
+                        <span class="badge badge-orange">No bonificada</span>
+                        <span class="panel-subheader-label">Hipoteca Fija — <span id="plazo-label-2">20</span>
+                            años</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">% Interés</label>
+                            <input class="form-input" type="number" step="0.01" id="fija-nobon-interes"
+                                placeholder="3.20" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cuota mensual (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="fija-nobon-cuota"
+                                placeholder="960" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Total a pagar (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="fija-nobon-total"
+                                placeholder="230.000" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Amortización 0-10 años (%)</label>
+                            <input class="form-input" type="number" step="0.01" id="fija-nobon-amort-0-10"
+                                placeholder="2" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Amortización resto (%)</label>
+                            <input class="form-input" type="number" step="0.01" id="fija-nobon-amort-resto"
+                                placeholder="1.5" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Hipoteca Mixta -->
+                <div class="tab-panel" id="panel-mixta">
+                    <!-- Bonificada -->
+                    <div class="panel-subheader">
+                        <span class="badge badge-green">Bonificada</span>
+                        <span class="panel-subheader-label">Hipoteca Mixta — <span id="plazo-label-3">20</span>
+                            años</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Total a pagar (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-bon-total"
+                                placeholder="210.000" />
+                        </div>
+                    </div>
+                    <div class="form-row tramo-row">
+                        <div class="tramo-label">Tramo Fijo</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Años fija</label>
+                            <input class="form-input" type="number" id="mixta-bon-anios-fija" placeholder="10" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">% Interés fija</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-bon-interes-fija"
+                                placeholder="2.10" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cuota mensual fija (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-bon-cuota-fija"
+                                placeholder="870" />
+                        </div>
+                    </div>
+                    <div class="form-row tramo-row">
+                        <div class="tramo-label">Tramo Variable</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Años variable</label>
+                            <input class="form-input" type="number" id="mixta-bon-anios-variable" placeholder="10" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">% Interés variable</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-bon-interes-variable"
+                                placeholder="0.85" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cuota mensual variable (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-bon-cuota-variable"
+                                placeholder="920" />
+                        </div>
+                    </div>
+
+                    <!-- No Bonificada -->
+                    <div class="panel-subheader">
+                        <span class="badge badge-orange">No bonificada</span>
+                        <span class="panel-subheader-label">Hipoteca Mixta — <span id="plazo-label-4">20</span>
+                            años</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Total a pagar (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-nobon-total"
+                                placeholder="230.000" />
+                        </div>
+                    </div>
+                    <div class="form-row tramo-row">
+                        <div class="tramo-label">Tramo Fijo</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Años fija</label>
+                            <input class="form-input" type="number" id="mixta-nobon-anios-fija" placeholder="10" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">% Interés fija</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-nobon-interes-fija"
+                                placeholder="2.80" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cuota mensual fija (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-nobon-cuota-fija"
+                                placeholder="930" />
+                        </div>
+                    </div>
+                    <div class="form-row tramo-row">
+                        <div class="tramo-label">Tramo Variable</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Años variable</label>
+                            <input class="form-input" type="number" id="mixta-nobon-anios-variable" placeholder="10" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">% Interés variable</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-nobon-interes-variable"
+                                placeholder="1.10" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cuota mensual variable (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-nobon-cuota-variable"
+                                placeholder="980" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Amortización 0-10 años (%)</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-nobon-amort-0-10"
+                                placeholder="2" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Amortización resto (%)</label>
+                            <input class="form-input" type="number" step="0.01" id="mixta-nobon-amort-resto"
+                                placeholder="1.5" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Otros Gastos -->
+                <div class="tab-panel" id="panel-gastos">
+                    <div class="panel-subheader">
+                        <svg viewBox="0 0 24 24" fill="none" class="panel-icon">
+                            <path d="M9 14L4 9L9 4M15 10L20 15L15 20" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span class="panel-subheader-label">Otros gastos asociados</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Tasación (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="gasto-tasacion" placeholder="400" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Registro propiedad (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="gasto-registro" placeholder="600" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Notaría (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="gasto-notaria"
+                                placeholder="1.000" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gestoría (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="gasto-gestoria" placeholder="300" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Impuesto AJD (€)</label>
+                            <input class="form-input" type="number" step="0.01" id="gasto-ajd" placeholder="0" />
+                        </div>
+                        <div class="form-group">
+                            <!-- placeholder -->
+                        </div>
+                    </div>
+                    <div class="total-gastos-preview" id="total-gastos-preview">
+                        <span>Total otros gastos:</span>
+                        <strong id="total-gastos-val">0,00 €</strong>
+                    </div>
+                </div>
+
+                <!-- TAB: Bonificaciones -->
+                <div class="tab-panel" id="panel-bonificaciones">
+                    <div class="panel-subheader">
+                        <svg viewBox="0 0 24 24" fill="none" class="panel-icon">
+                            <path
+                                d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        <span class="panel-subheader-label">Bonificaciones disponibles</span>
+                    </div>
+                    <p class="panel-help-text">Indica la reducción de tipo de interés que ofrece cada bonificación</p>
+                    <div class="bonif-grid">
+                        <div class="bonif-item">
+                            <div class="bonif-header">
+                                <label class="bonif-label">
+                                    <input type="checkbox" id="bon-nomina-check" class="bonif-check"
+                                        onchange="toggleBonif('nominaReduction')" />
+                                    <span class="bonif-name">Domiciliar nómina</span>
+                                </label>
+                            </div>
+                            <input class="form-input bonif-input" type="number" step="0.01" id="bon-nomina-reduction"
+                                placeholder="0.30 %" disabled />
+                        </div>
+                        <div class="bonif-item">
+                            <div class="bonif-header">
+                                <label class="bonif-label">
+                                    <input type="checkbox" id="bon-vida-check" class="bonif-check"
+                                        onchange="toggleBonif('vidaReduction')" />
+                                    <span class="bonif-name">Seguro de vida</span>
+                                </label>
+                            </div>
+                            <input class="form-input bonif-input" type="number" step="0.01" id="bon-vida-reduction"
+                                placeholder="0.10 %" disabled />
+                        </div>
+                        <div class="bonif-item">
+                            <div class="bonif-header">
+                                <label class="bonif-label">
+                                    <input type="checkbox" id="bon-hogar-check" class="bonif-check"
+                                        onchange="toggleBonif('hogarReduction')" />
+                                    <span class="bonif-name">Seguro de hogar</span>
+                                </label>
+                            </div>
+                            <input class="form-input bonif-input" type="number" step="0.01" id="bon-hogar-reduction"
+                                placeholder="0.10 %" disabled />
+                        </div>
+                        <div class="bonif-item">
+                            <div class="bonif-header">
+                                <label class="bonif-label">
+                                    <input type="checkbox" id="bon-tarjeta-check" class="bonif-check"
+                                        onchange="toggleBonif('tarjetaReduction')" />
+                                    <span class="bonif-name">Tarjeta de crédito</span>
+                                </label>
+                            </div>
+                            <input class="form-input bonif-input" type="number" step="0.01" id="bon-tarjeta-reduction"
+                                placeholder="0.05 %" disabled />
+                        </div>
+                    </div>
+                    <!-- Coste bonificaciones -->
+                    <div class="panel-subheader" style="margin-top: 1.5rem;">
+                        <span class="panel-subheader-label">Coste anual de los productos (€/año)</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Coste seguro de vida (€/año)</label>
+                            <input class="form-input" type="number" step="0.01" id="bon-vida-coste" placeholder="350" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Coste seguro de hogar (€/año)</label>
+                            <input class="form-input" type="number" step="0.01" id="bon-hogar-coste"
+                                placeholder="200" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Coste tarjeta crédito (€/año)</label>
+                            <input class="form-input" type="number" step="0.01" id="bon-tarjeta-coste"
+                                placeholder="50" />
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end modal-body -->
+
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeBankModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveBank()">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    Guardar banco
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
