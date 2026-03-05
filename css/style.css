@@ -1208,3 +1208,195 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* =============================================
+   SYNC STATUS PILL
+   ============================================= */
+.sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: var(--transition);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.sync-icon {
+  font-size: 0.7rem;
+}
+
+.sync-text {
+  color: inherit;
+}
+
+.sync-offline {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.sync-syncing {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: var(--accent-blue-light);
+  animation: pulse-sync 1.5s ease-in-out infinite;
+}
+
+.sync-synced {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.sync-error {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.sync-idle {
+  background: var(--glass);
+  border-color: var(--glass-border);
+  color: var(--text-muted);
+}
+
+@keyframes pulse-sync {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* =============================================
+   HEADER BUTTON — BLUE VARIANT
+   ============================================= */
+.btn-header-blue {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: var(--accent-blue-light);
+}
+
+.btn-header-blue:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #bfdbfe;
+}
+
+/* =============================================
+   GIST MODAL
+   ============================================= */
+.modal-gist {
+  max-width: 520px;
+}
+
+.gist-status-banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  font-size: 0.83rem;
+  margin-bottom: 1.25rem;
+}
+
+.gist-status-ok {
+  color: #34d399;
+}
+
+.gist-status-ok a {
+  color: #34d399;
+  text-decoration: underline;
+}
+
+.gist-status-warn {
+  color: #fbbf24;
+}
+
+.gist-status-neutral {
+  color: var(--text-muted);
+}
+
+/* Help accordion */
+.gist-help {
+  background: rgba(59, 130, 246, 0.04);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.gist-help summary {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-blue-light);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.gist-help summary::-webkit-details-marker {
+  display: none;
+}
+
+.gist-help summary::before {
+  content: '▶ ';
+  font-size: 0.65rem;
+}
+
+.gist-help[open] summary::before {
+  content: '▼ ';
+}
+
+.gist-help ol {
+  margin: 0.75rem 0 0 1rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.gist-help a {
+  color: var(--accent-blue-light);
+  text-decoration: underline;
+}
+
+.gist-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.btn-danger-soft {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+.btn-danger-soft:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+/* Field hints */
+.field-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+  line-height: 1.5;
+}
+
+.field-optional {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
