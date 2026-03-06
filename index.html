@@ -435,6 +435,30 @@
                             <input class="form-input bonif-input" type="number" step="0.01" id="bon-tarjeta-reduction"
                                 placeholder="0.05 %" disabled />
                         </div>
+                        <div class="bonif-item">
+                            <div class="bonif-header"><label class="bonif-label"><input type="checkbox"
+                                        id="bon-alarma-check" class="bonif-check"
+                                        onchange="App.toggleBonif('alarmaReduction')" /><span
+                                        class="bonif-name">Alarma</span></label></div>
+                            <input class="form-input bonif-input" type="number" step="0.01" id="bon-alarma-reduction"
+                                placeholder="0.10 %" disabled />
+                        </div>
+                        <div class="bonif-item">
+                            <div class="bonif-header"><label class="bonif-label"><input type="checkbox"
+                                        id="bon-spp-check" class="bonif-check"
+                                        onchange="App.toggleBonif('sppReduction')" /><span
+                                        class="bonif-name">Prot. de pagos</span></label></div>
+                            <input class="form-input bonif-input" type="number" step="0.01" id="bon-spp-reduction"
+                                placeholder="0.15 %" disabled />
+                        </div>
+                        <div class="bonif-item">
+                            <div class="bonif-header"><label class="bonif-label"><input type="checkbox"
+                                        id="bon-fondos-check" class="bonif-check"
+                                        onchange="App.toggleBonif('fondosReduction')" /><span
+                                        class="bonif-name">F. Inversión</span></label></div>
+                            <input class="form-input bonif-input" type="number" step="0.01" id="bon-fondos-reduction"
+                                placeholder="0.10 %" disabled />
+                        </div>
                     </div>
                     <div class="panel-subheader" style="margin-top:1.5rem;"><span class="panel-subheader-label">Coste
                             anual de los productos (€/año)</span></div>
@@ -449,6 +473,17 @@
                     <div class="form-row">
                         <div class="form-group"><label class="form-label">Coste tarjeta crédito (€/año)</label><input
                                 class="form-input" type="number" step="0.01" id="bon-tarjeta-coste" placeholder="50" />
+                        </div>
+                        <div class="form-group"><label class="form-label">Coste alarma (€/mes)</label><input
+                                class="form-input" type="number" step="0.01" id="bon-alarma-coste" placeholder="30" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">Coste prot. pagos (pago único €)</label><input
+                                class="form-input" type="number" step="0.01" id="bon-spp-coste" placeholder="800" />
+                        </div>
+                        <div class="form-group"><label class="form-label">F. Inversión (dinero mín. €)</label><input
+                                class="form-input" type="number" step="0.01" id="bon-fondos-minimo" placeholder="5000" />
                         </div>
                     </div>
                 </div>

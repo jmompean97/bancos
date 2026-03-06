@@ -122,9 +122,12 @@ const App = (() => {
             'gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd',
             'bon-nomina-reduction', 'bon-vida-reduction', 'bon-hogar-reduction', 'bon-tarjeta-reduction',
             'bon-vida-coste', 'bon-hogar-coste', 'bon-tarjeta-coste',
+            'bon-alarma-reduction', 'bon-alarma-coste',
+            'bon-spp-reduction', 'bon-spp-coste',
+            'bon-fondos-reduction', 'bon-fondos-minimo'
         ].forEach(id => sv(id, ''));
-        ['bon-nomina-check', 'bon-vida-check', 'bon-hogar-check', 'bon-tarjeta-check'].forEach(id => sc(id, false));
-        ['bon-nomina-reduction', 'bon-vida-reduction', 'bon-hogar-reduction', 'bon-tarjeta-reduction'].forEach(id => {
+        ['bon-nomina-check', 'bon-vida-check', 'bon-hogar-check', 'bon-tarjeta-check', 'bon-alarma-check', 'bon-spp-check', 'bon-fondos-check'].forEach(id => sc(id, false));
+        ['bon-nomina-reduction', 'bon-vida-reduction', 'bon-hogar-reduction', 'bon-tarjeta-reduction', 'bon-alarma-reduction', 'bon-spp-reduction', 'bon-fondos-reduction'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.disabled = true;
         });
@@ -151,10 +154,16 @@ const App = (() => {
         sc('bon-vida-check', b.bonificaciones?.vidaActiva); sv('bon-vida-reduction', b.bonificaciones?.vidaReduction);
         sc('bon-hogar-check', b.bonificaciones?.hogarActiva); sv('bon-hogar-reduction', b.bonificaciones?.hogarReduction);
         sc('bon-tarjeta-check', b.bonificaciones?.tarjetaActiva); sv('bon-tarjeta-reduction', b.bonificaciones?.tarjetaReduction);
+        sc('bon-alarma-check', b.bonificaciones?.alarmaActiva); sv('bon-alarma-reduction', b.bonificaciones?.alarmaReduction);
+        sc('bon-spp-check', b.bonificaciones?.sppActiva); sv('bon-spp-reduction', b.bonificaciones?.sppReduction);
+        sc('bon-fondos-check', b.bonificaciones?.fondosActiva); sv('bon-fondos-reduction', b.bonificaciones?.fondosReduction);
         sv('bon-vida-coste', b.bonificaciones?.vidaCoste);
         sv('bon-hogar-coste', b.bonificaciones?.hogarCoste);
         sv('bon-tarjeta-coste', b.bonificaciones?.tarjetaCoste);
-        ['nomina', 'vida', 'hogar', 'tarjeta'].forEach(k => {
+        sv('bon-alarma-coste', b.bonificaciones?.alarmaCoste);
+        sv('bon-spp-coste', b.bonificaciones?.sppCoste);
+        sv('bon-fondos-minimo', b.bonificaciones?.fondosMinimo);
+        ['nomina', 'vida', 'hogar', 'tarjeta', 'alarma', 'spp', 'fondos'].forEach(k => {
             const check = document.getElementById(`bon-${k}-check`);
             const input = document.getElementById(`bon-${k}-reduction`);
             if (check && input) input.disabled = !check.checked;
@@ -190,16 +199,27 @@ const App = (() => {
                 vidaActiva: document.getElementById('bon-vida-check')?.checked,
                 hogarActiva: document.getElementById('bon-hogar-check')?.checked,
                 tarjetaActiva: document.getElementById('bon-tarjeta-check')?.checked,
+                alarmaActiva: document.getElementById('bon-alarma-check')?.checked,
+                sppActiva: document.getElementById('bon-spp-check')?.checked,
+                fondosActiva: document.getElementById('bon-fondos-check')?.checked,
                 nominaReduction: gv('bon-nomina-reduction'), vidaReduction: gv('bon-vida-reduction'),
                 hogarReduction: gv('bon-hogar-reduction'), tarjetaReduction: gv('bon-tarjeta-reduction'),
+                alarmaReduction: gv('bon-alarma-reduction'), sppReduction: gv('bon-spp-reduction'),
+                fondosReduction: gv('bon-fondos-reduction'),
                 vidaCoste: gv('bon-vida-coste'), hogarCoste: gv('bon-hogar-coste'), tarjetaCoste: gv('bon-tarjeta-coste'),
+                alarmaCoste: gv('bon-alarma-coste'), sppCoste: gv('bon-spp-coste'), fondosMinimo: gv('bon-fondos-minimo'),
             },
         };
     }
 
     // ─── Bonif toggle ────────────────────────────
     function toggleBonif(field) {
-        const map = { nominaReduction: 'bon-nomina', vidaReduction: 'bon-vida', hogarReduction: 'bon-hogar', tarjetaReduction: 'bon-tarjeta' };
+        const map = {
+            nominaReduction: 'bon-nomina', vidaReduction: 'bon-vida',
+            hogarReduction: 'bon-hogar', tarjetaReduction: 'bon-tarjeta',
+            alarmaReduction: 'bon-alarma', sppReduction: 'bon-spp',
+            fondosReduction: 'bon-fondos'
+        };
         const prefix = map[field]; if (!prefix) return;
         const check = document.getElementById(prefix + '-check');
         const input = document.getElementById(prefix + '-reduction');

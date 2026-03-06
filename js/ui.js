@@ -121,6 +121,9 @@ const UI = (() => {
       if (b.bonificaciones?.vidaActiva) bonActivas.push('Seg. Vida');
       if (b.bonificaciones?.hogarActiva) bonActivas.push('Seg. Hogar');
       if (b.bonificaciones?.tarjetaActiva) bonActivas.push('Tarjeta');
+      if (b.bonificaciones?.alarmaActiva) bonActivas.push('Alarma');
+      if (b.bonificaciones?.sppActiva) bonActivas.push('Prot. Pagos');
+      if (b.bonificaciones?.fondosActiva) bonActivas.push('F. Inversión');
 
       return `
         <div class="bank-card" data-color="${b.color}">
@@ -266,6 +269,12 @@ const UI = (() => {
           ${row('Coste seg. hogar (€/año)', b => b.bonificaciones?.hogarActiva ? b.bonificaciones.hogarCoste : null, fmtEur, bestMin, worstMax)}
           ${row('Tarjeta de crédito', b => b.bonificaciones?.tarjetaActiva ? (b.bonificaciones.tarjetaReduction ? '-' + b.bonificaciones.tarjetaReduction + ' %' : 'Sí') : null, v => v, null, null)}
           ${row('Coste tarjeta (€/año)', b => b.bonificaciones?.tarjetaActiva ? b.bonificaciones.tarjetaCoste : null, fmtEur, bestMin, worstMax)}
+          ${row('Alarma', b => b.bonificaciones?.alarmaActiva ? (b.bonificaciones.alarmaReduction ? '-' + b.bonificaciones.alarmaReduction + ' %' : 'Sí') : null, v => v, null, null)}
+          ${row('Coste alarma (€/mes)', b => b.bonificaciones?.alarmaActiva ? b.bonificaciones.alarmaCoste : null, fmtEur, bestMin, worstMax)}
+          ${row('Prot. de pagos', b => b.bonificaciones?.sppActiva ? (b.bonificaciones.sppReduction ? '-' + b.bonificaciones.sppReduction + ' %' : 'Sí') : null, v => v, null, null)}
+          ${row('Coste prot. pagos (€ único)', b => b.bonificaciones?.sppActiva ? b.bonificaciones.sppCoste : null, fmtEur, bestMin, worstMax)}
+          ${row('Fondos de inversión', b => b.bonificaciones?.fondosActiva ? (b.bonificaciones.fondosReduction ? '-' + b.bonificaciones.fondosReduction + ' %' : 'Sí') : null, v => v, null, null)}
+          ${row('F. inversión mín. (€)', b => b.bonificaciones?.fondosActiva ? b.bonificaciones.fondosMinimo : null, fmtEur, bestMin, worstMax)}
         </tbody>
       </table>`;
 
