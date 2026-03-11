@@ -41,6 +41,19 @@
             </div>
 
             <div class="header-actions">
+                <button class="btn btn-header btn-theme-toggle" id="btn-theme" onclick="ThemeToggle.toggle()"
+                    title="Cambiar tema" aria-label="Cambiar entre modo oscuro y claro">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" style="display:none">
+                        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" />
+                        <path
+                            d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
                 <!-- Gist sync config -->
                 <button class="btn btn-header btn-header-blue" onclick="App.openGistModal()"
                     title="Configurar sincronización con GitHub Gist" id="btn-gist-settings">
@@ -516,6 +529,46 @@
     <div class="toast" id="toast"></div>
 
     <!-- ===== SCRIPTS ===== -->
+    <script>
+        // ThemeToggle: carga el tema antes del primer render (sin flash)
+        const ThemeToggle = (() => {
+            const KEY = 'bancocomp-theme';
+
+            function _apply(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                const btn = document.getElementById('btn-theme');
+                if (!btn) return;
+                const moon = btn.querySelector('.icon-moon');
+                const sun = btn.querySelector('.icon-sun');
+                if (theme === 'light') {
+                    moon.style.display = 'none';
+                    sun.style.display = 'block';
+                    btn.title = 'Cambiar a modo oscuro';
+                } else {
+                    moon.style.display = 'block';
+                    sun.style.display = 'none';
+                    btn.title = 'Cambiar a modo claro';
+                }
+            }
+
+            function init() {
+                const saved = localStorage.getItem(KEY) || 'dark';
+                _apply(saved);
+            }
+
+            function toggle() {
+                const current = document.documentElement.getAttribute('data-theme') || 'dark';
+                const next = current === 'dark' ? 'light' : 'dark';
+                localStorage.setItem(KEY, next);
+                _apply(next);
+            }
+
+            // Aplicar inmediatamente (sin esperar al DOMContentLoaded)
+            init();
+
+            return { toggle, init };
+        })();
+    </script>
     <script src="js/db.js"></script>
     <script src="js/gist.js"></script>
     <script src="js/euribor.js"></script>

@@ -279,8 +279,14 @@ const UI = (() => {
       </th>`
     ).join('');
 
+    const colgroup = `<colgroup>
+        <col class="col-label">
+        ${banks.map(() => `<col class="col-bank">`).join('')}
+      </colgroup>`;
+
     wrapper.innerHTML = `
       <table class="compare-table">
+        ${colgroup}
         <thead><tr><th>Campo</th>${headers}</tr></thead>
         <tbody>
           ${sectionRow(`🏠 Hipoteca Fija — ${plazo} años — BONIFICADA`, 'green')}

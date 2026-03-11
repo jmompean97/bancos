@@ -9,10 +9,15 @@
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-color);
   padding: 0 2rem;
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+
+[data-theme="light"] .app-header {
+  background: rgba(240, 244, 255, 0.88);
 }
 
 .header-inner {
-  max-width: 1400px;
+  max-width: 1550px;
   margin: 0 auto;
   height: 64px;
   display: flex;
@@ -105,11 +110,33 @@
   color: #fca5a5;
 }
 
+.btn-theme-toggle {
+  padding: 0.4rem 0.55rem;
+  background: var(--glass);
+  border-color: var(--glass-border);
+  color: var(--text-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-theme-toggle svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+}
+
+.btn-theme-toggle:hover {
+  background: var(--glass);
+  color: var(--accent-blue-light);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: scale(1.05);
+}
+
 /* =============================================
    MAIN LAYOUT
    ============================================= */
 .app-main {
-  max-width: 1400px;
+  max-width: 1550px;
   margin: 0 auto;
   padding: 2rem;
   display: flex;
@@ -165,6 +192,7 @@
   justify-content: center;
   font-weight: 700;
   font-size: 0.9rem;
+  color: white;
   box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
 }
 

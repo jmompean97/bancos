@@ -37,7 +37,7 @@
 .form-input:focus {
   border-color: var(--accent-blue);
   box-shadow: 0 0 0 3px var(--border-focus);
-  background: rgba(13, 21, 38, 0.9);
+  background: var(--bg-input-focus);
 }
 
 .form-input:disabled {
@@ -232,7 +232,7 @@
 
 /* Bank Card */
 .bank-card {
-  background: rgba(20, 30, 51, 0.6);
+  background: var(--bg-card-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -266,9 +266,9 @@
 
 .bank-card:hover {
   border-color: rgba(59, 130, 246, 0.25);
-  background: rgba(26, 38, 68, 0.8);
+  background: var(--bg-card-surface-hover);
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-card-dark);
 }
 
 /* Drag & Drop states */
@@ -276,7 +276,7 @@
   opacity: 0.35;
   transform: scale(0.97);
   border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-dragging);
   cursor: grabbing;
 }
 
@@ -331,7 +331,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: rgba(15, 24, 41, 0.6);
+  background: var(--bg-filter-bar);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   margin-bottom: 1rem;
@@ -702,27 +702,43 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
+  table-layout: fixed;
 }
 
 .compare-table th {
-  background: rgba(15, 24, 41, 0.98);
+  background: var(--bg-table-header);
   border-bottom: 2px solid rgba(59, 130, 246, 0.2);
   padding: 0.85rem 1rem;
   text-align: left;
   font-weight: 700;
   font-family: var(--font-display);
   color: var(--text-primary);
-  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Col-label: ancho fijo (se aplica via colgroup) */
+col.col-label {
+  width: 200px;
+}
+
+/* Col-bank: sin width — el browser distribuye equitativamente con table-layout:fixed */
+
 .compare-table th:first-child {
-  background: rgba(10, 15, 28, 0.98);
+  background: var(--bg-table-header-label);
   color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  min-width: 220px;
+  width: 200px;
+}
+
+/* Columnas de banco: distribución equitativa automática */
+.compare-table th:not(:first-child),
+.compare-table td:not(:first-child) {
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* ── Sticky clone header (JS-driven) ── */
@@ -734,10 +750,10 @@
   right: 0;
   z-index: 90;
   pointer-events: none;
-  background: rgba(9, 13, 24, 0.97);
+  background: var(--bg-sticky-header);
   backdrop-filter: blur(12px);
   border-bottom: 2px solid rgba(59, 130, 246, 0.25);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-toast);
   overflow: hidden;
 }
 
@@ -781,7 +797,7 @@
 }
 
 .compare-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--tr-hover-bg);
 }
 
 .compare-table .section-row td {
@@ -822,6 +838,24 @@
   color: var(--accent-red) !important;
 }
 
+/* ── Responsive compare-table ── */
+@media (max-width: 768px) {
+  col.col-label {
+    width: 140px;
+  }
+
+  .compare-table th:first-child,
+  .compare-table td:first-child {
+    width: 140px;
+    min-width: 140px;
+  }
+
+  .compare-table th:not(:first-child),
+  .compare-table td:not(:first-child) {
+    min-width: 120px;
+  }
+}
+
 .no-val {
   color: var(--text-muted) !important;
   font-style: italic;
@@ -835,14 +869,14 @@
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%) translateY(100px);
-  background: #1e2d4a;
+  background: var(--bg-toast);
   border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: var(--radius-md);
   padding: 0.8rem 1.5rem;
   font-size: 0.88rem;
   font-weight: 500;
   color: var(--text-primary);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-toast);
   z-index: 9999;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
   opacity: 0;
@@ -860,6 +894,22 @@
 
 .toast.error {
   border-color: rgba(239, 68, 68, 0.4);
+}
+
+[data-theme="light"] .toast {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(59, 130, 246, 0.1);
+  color: #0f172a;
+}
+
+[data-theme="light"] .toast.success {
+  border-color: rgba(5, 150, 105, 0.5);
+  background: #f0fdf9;
+}
+
+[data-theme="light"] .toast.error {
+  border-color: rgba(220, 38, 38, 0.5);
+  background: #fff1f2;
 }
 
 /* =============================================
@@ -1059,6 +1109,37 @@
 /* =============================================
    HEADER BUTTON — BLUE VARIANT
    ============================================= */
+/* ── Sync status: light mode ── */
+[data-theme="light"] .sync-offline {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(180, 110, 0, 0.35);
+  color: #92400e;
+}
+
+[data-theme="light"] .sync-syncing {
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #1d4ed8;
+}
+
+[data-theme="light"] .sync-synced {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(5, 120, 80, 0.35);
+  color: #065f46;
+}
+
+[data-theme="light"] .sync-error {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(185, 28, 28, 0.35);
+  color: #991b1b;
+}
+
+[data-theme="light"] .sync-idle {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.14);
+  color: var(--text-muted);
+}
+
 .btn-header-blue {
   background: rgba(59, 130, 246, 0.1);
   border-color: rgba(59, 130, 246, 0.25);

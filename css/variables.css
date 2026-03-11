@@ -10,6 +10,23 @@
   --bg-modal: #111827;
   --bg-modal-body: #0f1729;
 
+  /* Superficies adicionales (hardcodeadas antes) */
+  --bg-card-surface: rgba(20, 30, 51, 0.6);
+  --bg-card-surface-hover: rgba(26, 38, 68, 0.8);
+  --bg-table-header: rgba(15, 24, 41, 0.98);
+  --bg-table-header-label: rgba(10, 15, 28, 0.98);
+  --bg-sticky-header: rgba(9, 13, 24, 0.97);
+  --bg-toast: #1e2d4a;
+  --bg-filter-bar: rgba(15, 24, 41, 0.6);
+  --bg-input-focus: rgba(13, 21, 38, 0.9);
+  --shadow-card-dark: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --shadow-dragging: 0 4px 20px rgba(0, 0, 0, 0.6);
+  --shadow-toast: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --tr-hover-bg: rgba(255, 255, 255, 0.02);
+
+  /* Gradiente de sección */
+  --gradient-card: linear-gradient(145deg, #141e33, #1a2644);
+
   --accent-blue: #3b82f6;
   --accent-blue-light: #60a5fa;
   --accent-purple: #8b5cf6;
@@ -66,9 +83,58 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
+  transition: background 0.35s ease, color 0.35s ease;
   background-image:
     radial-gradient(ellipse 80% 60% at 20% -10%, rgba(59, 130, 246, 0.12) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 80% 110%, rgba(139, 92, 246, 0.10) 0%, transparent 60%);
+}
+
+/* =============================================
+   LIGHT MODE
+   ============================================= */
+[data-theme="light"] {
+  --bg-primary: #f0f4ff;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0f4ff;
+  --bg-input: #f8faff;
+  --bg-modal: #ffffff;
+  --bg-modal-body: #f8faff;
+
+  /* Superficies light */
+  --bg-card-surface: rgba(255, 255, 255, 0.85);
+  --bg-card-surface-hover: rgba(240, 244, 255, 0.95);
+  --bg-table-header: rgba(240, 244, 255, 0.98);
+  --bg-table-header-label: rgba(230, 237, 255, 0.98);
+  --bg-sticky-header: rgba(240, 244, 255, 0.97);
+  --bg-toast: #ffffff;
+  --bg-filter-bar: rgba(240, 244, 255, 0.8);
+  --bg-input-focus: rgba(255, 255, 255, 0.95);
+  --shadow-card-dark: 0 8px 30px rgba(15, 23, 42, 0.1);
+  --shadow-dragging: 0 4px 20px rgba(15, 23, 42, 0.15);
+  --shadow-toast: 0 8px 32px rgba(15, 23, 42, 0.2);
+  --tr-hover-bg: rgba(59, 130, 246, 0.03);
+
+  --gradient-card: linear-gradient(145deg, #ffffff, #f0f4ff);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  --border-color: rgba(15, 23, 42, 0.1);
+  --border-focus: rgba(59, 130, 246, 0.4);
+  --glass: rgba(59, 130, 246, 0.04);
+  --glass-border: rgba(15, 23, 42, 0.08);
+
+  --shadow-card: 0 4px 24px rgba(15, 23, 42, 0.08);
+  --shadow-modal: 0 24px 80px rgba(15, 23, 42, 0.2);
+  --shadow-btn: 0 4px 20px rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="light"] body {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% -10%, rgba(59, 130, 246, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 110%, rgba(139, 92, 246, 0.06) 0%, transparent 60%);
 }
 
 /* =============================================

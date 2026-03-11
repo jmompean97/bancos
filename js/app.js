@@ -31,7 +31,11 @@ const App = (() => {
         }
         _gistWriting = true;
         _gistPending = false;
-        const data = { conditions: state.conditions, banks: state.banks };
+        const data = {
+            conditions: state.conditions,
+            banks: state.banks,
+            hiddenBanks: [...state.hiddenBanks],
+        };
         UI.setSyncStatus('syncing');
         try {
             await Gist.write(data);
@@ -56,7 +60,11 @@ const App = (() => {
     }
 
     async function persist() {
-        const data = { conditions: state.conditions, banks: state.banks };
+        const data = {
+            conditions: state.conditions,
+            banks: state.banks,
+            hiddenBanks: [...state.hiddenBanks],  // Set → Array para JSON
+        };
         // 1. Siempre guardar en IndexedDB (local, inmediato)
         await DB.save('session', data);
         // 2. Si hay Gist configurado, encolar escritura en la nube
@@ -291,6 +299,7 @@ const App = (() => {
         const visibleBanks = state.banks.filter((_, i) => !state.hiddenBanks.has(i));
         UI.renderBankFilter(state.banks, state.hiddenBanks);
         UI.renderCompareTable(visibleBanks, state.conditions);
+        persist(); // guardar en IndexedDB + encolar Gist sync
     }
 
     // ─── Export / Import JSON ───────────────────
@@ -509,7 +518,8 @@ const App = (() => {
                     state.conditions = remoteData.conditions || null;
                     state.banks = remoteData.banks || [];
                     state.banks.forEach((b, i) => b.color = i % COLORS);
-                    await DB.save('session', { conditions: state.conditions, banks: state.banks });
+                    state.hiddenBanks = new Set(remoteData.hiddenBanks || []);
+                    await DB.save('session', { conditions: state.conditions, banks: state.banks, hiddenBanks: [...state.hiddenBanks] });
                     loaded = true;
                     UI.setSyncStatus('synced');
                 }
@@ -524,6 +534,7 @@ const App = (() => {
             if (saved) {
                 state.conditions = saved.conditions || null;
                 state.banks = saved.banks || [];
+                state.hiddenBanks = new Set(saved.hiddenBanks || []);
             }
             UI.setSyncStatus(Gist.isConfigured() ? 'error' : 'offline');
         }
