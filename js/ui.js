@@ -89,7 +89,7 @@ const UI = (() => {
 
   // ─── Gastos total live ──────────────────────
   function updateGastosTotal() {
-    const ids = ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd'];
+    const ids = ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura'];
     const total = ids.reduce((s, id) => s + (parseFloat(document.getElementById(id)?.value) || 0), 0);
     const el = document.getElementById('total-gastos-val');
     if (el) el.textContent = total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -126,8 +126,11 @@ const UI = (() => {
       if (b.bonificaciones?.fondosActiva) bonActivas.push('F. Inversión');
 
       return `
-        <div class="bank-card" data-color="${b.color}">
+        <div class="bank-card" data-color="${b.color}" data-index="${i}" draggable="true">
           <div class="bank-card-header">
+            <div class="drag-handle" title="Arrastrar para reordenar" aria-label="Mover banco">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="5" r="1.2" fill="currentColor"/><circle cx="15" cy="5" r="1.2" fill="currentColor"/><circle cx="9" cy="12" r="1.2" fill="currentColor"/><circle cx="15" cy="12" r="1.2" fill="currentColor"/><circle cx="9" cy="19" r="1.2" fill="currentColor"/><circle cx="15" cy="19" r="1.2" fill="currentColor"/></svg>
+            </div>
             <div class="bank-avatar" data-color="${b.color}">${initials}</div>
             <span class="bank-name">${escapeHtml(b.name)}</span>
             <div class="bank-actions">
@@ -160,10 +163,69 @@ const UI = (() => {
           <div class="bank-tags">
             ${bonActivas.map(t => `<span class="bank-tag tag-blue">${t}</span>`).join('')}
             ${b.fijaBon?.interes ? '<span class="bank-tag tag-green">Hipoteca fija</span>' : ''}
-            ${b.mixtaBon?.total ? '<span class="bank-tag tag-purple">Hipoteca mixta</span>' : ''}
           </div>
         </div>`;
     }).join('');
+
+    // ─── Drag & Drop: inicializar solo una vez ─
+    if (!grid._dndReady) {
+      _initDragAndDrop(grid);
+      grid._dndReady = true;
+    }
+  }
+
+  function _initDragAndDrop(grid) {
+    let dragSrcIndex = null;
+    let dragOverIndex = null;
+
+    function getCard(el) {
+      return el.closest('.bank-card');
+    }
+
+    grid.addEventListener('dragstart', e => {
+      const card = getCard(e.target);
+      if (!card) return;
+      dragSrcIndex = parseInt(card.dataset.index, 10);
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', dragSrcIndex);
+    });
+
+    grid.addEventListener('dragend', () => {
+      grid.querySelectorAll('.bank-card').forEach(c => {
+        c.classList.remove('dragging', 'drag-over');
+      });
+      dragSrcIndex = null;
+      dragOverIndex = null;
+    });
+
+    grid.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const card = getCard(e.target);
+      if (!card) return;
+      const newOver = parseInt(card.dataset.index, 10);
+      if (newOver === dragSrcIndex) return;
+      if (newOver !== dragOverIndex) {
+        grid.querySelectorAll('.bank-card').forEach(c => c.classList.remove('drag-over'));
+        dragOverIndex = newOver;
+        card.classList.add('drag-over');
+      }
+    });
+
+    grid.addEventListener('dragleave', e => {
+      const card = getCard(e.target);
+      if (card && !card.contains(e.relatedTarget)) card.classList.remove('drag-over');
+    });
+
+    grid.addEventListener('drop', e => {
+      e.preventDefault();
+      const card = getCard(e.target);
+      if (!card) return;
+      const dropIndex = parseInt(card.dataset.index, 10);
+      if (dragSrcIndex === null || dragSrcIndex === dropIndex) return;
+      App.reorderBanks(dragSrcIndex, dropIndex);
+    });
   }
 
   // ─── Compare Table ──────────────────────────
@@ -233,33 +295,15 @@ const UI = (() => {
           ${row('Amortización 0-10 años', b => b.fijaNobon?.amort010, fmtPct, bestMin, worstMax)}
           ${row('Amortización resto', b => b.fijaNobon?.amortResto, fmtPct, bestMin, worstMax)}
 
-          ${sectionRow(`🔄 Hipoteca Mixta — ${plazo} años — BONIFICADA`, 'green')}
-          ${row('Total a pagar', b => b.mixtaBon?.total, fmtEur, bestMin, worstMax)}
-          ${row('Años tramo fijo', b => b.mixtaBon?.aniosFija, v => v + ' años', null, null)}
-          ${row('% Interés fija', b => b.mixtaBon?.interesFija, fmtPct, bestMin, worstMax)}
-          ${row('Cuota mensual fija', b => b.mixtaBon?.cuotaFija, fmtEur, bestMin, worstMax)}
-          ${row('Años tramo variable', b => b.mixtaBon?.aniosVar, v => v + ' años', null, null)}
-          ${row('% Interés variable', b => b.mixtaBon?.interesVar, fmtPct, bestMin, worstMax)}
-          ${row('Cuota mensual variable', b => b.mixtaBon?.cuotaVar, fmtEur, bestMin, worstMax)}
-
-          ${sectionRow(`🔄 Hipoteca Mixta — ${plazo} años — NO BONIFICADA`, 'orange')}
-          ${row('Total a pagar', b => b.mixtaNobon?.total, fmtEur, bestMin, worstMax)}
-          ${row('Años tramo fijo', b => b.mixtaNobon?.aniosFija, v => v + ' años', null, null)}
-          ${row('% Interés fija', b => b.mixtaNobon?.interesFija, fmtPct, bestMin, worstMax)}
-          ${row('Cuota mensual fija', b => b.mixtaNobon?.cuotaFija, fmtEur, bestMin, worstMax)}
-          ${row('Años tramo variable', b => b.mixtaNobon?.aniosVar, v => v + ' años', null, null)}
-          ${row('% Interés variable', b => b.mixtaNobon?.interesVar, fmtPct, bestMin, worstMax)}
-          ${row('Cuota mensual variable', b => b.mixtaNobon?.cuotaVar, fmtEur, bestMin, worstMax)}
-          ${row('Amortización 0-10 años', b => b.mixtaNobon?.amort010, fmtPct, bestMin, worstMax)}
-          ${row('Amortización resto', b => b.mixtaNobon?.amortResto, fmtPct, bestMin, worstMax)}
-
           ${sectionRow('💸 Otros Gastos', '')}
           ${row('Tasación', b => b.gastos?.tasacion, fmtEur, bestMin, worstMax)}
           ${row('Registro propiedad', b => b.gastos?.registro, fmtEur, bestMin, worstMax)}
           ${row('Notaría', b => b.gastos?.notaria, fmtEur, bestMin, worstMax)}
           ${row('Gestoría', b => b.gastos?.gestoria, fmtEur, bestMin, worstMax)}
           ${row('Impuesto AJD', b => b.gastos?.ajd, fmtEur, bestMin, worstMax)}
+          ${row('Comisión de apertura', b => b.gastos?.apertura, fmtEur, bestMin, worstMax)}
           ${row('TOTAL otros gastos', totalGastos, fmtEur, bestMin, worstMax)}
+          ${row('Anotaciones', b => b.gastos?.notas || null, v => `<span class="table-notes">${escapeHtml(v)}</span>`, null, null)}
 
           ${sectionRow('⭐ Bonificaciones', 'purple')}
           ${row('Domiciliar nómina', b => b.bonificaciones?.nominaActiva ? (b.bonificaciones.nominaReduction ? '-' + b.bonificaciones.nominaReduction + ' %' : 'Sí') : null, v => v, null, null)}
@@ -275,12 +319,29 @@ const UI = (() => {
           ${row('Coste prot. pagos (€ único)', b => b.bonificaciones?.sppActiva ? b.bonificaciones.sppCoste : null, fmtEur, bestMin, worstMax)}
           ${row('Fondos de inversión', b => b.bonificaciones?.fondosActiva ? (b.bonificaciones.fondosReduction ? '-' + b.bonificaciones.fondosReduction + ' %' : 'Sí') : null, v => v, null, null)}
           ${row('F. inversión mín. (€)', b => b.bonificaciones?.fondosActiva ? b.bonificaciones.fondosMinimo : null, fmtEur, bestMin, worstMax)}
+          ${row('Anotaciones', b => b.bonificaciones?.notas || null, v => `<span class="table-notes">${escapeHtml(v)}</span>`, null, null)}
         </tbody>
       </table>`;
 
     // ─── Sticky clone header ─────────────────
     if (_stickyCleanup) { _stickyCleanup(); _stickyCleanup = null; }
     _stickyCleanup = _initStickyHeader(wrapper);
+  }
+
+  // ─── Bank Filter Bar ────────────────────────
+  function renderBankFilter(banks, hiddenBanks) {
+    const el = document.getElementById('bank-filter');
+    if (!el) return;
+    if (!banks || banks.length === 0) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    el.innerHTML = `
+      <span class="bank-filter-label">Mostrar en tabla:</span>
+      ${banks.map((b, i) => {
+      const hidden = hiddenBanks.has(i);
+      const dot = `<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${colorGradient(b.color)};"></span>`;
+      return `<button class="bank-filter-chip ${hidden ? 'chip-hidden' : 'chip-visible'}" onclick="App.toggleBankVisibility(${i})" title="${hidden ? 'Mostrar' : 'Ocultar'} ${escapeHtml(b.name)}">${dot}${escapeHtml(b.name)}</button>`;
+    }).join('')}
+    `;
   }
 
   function _initStickyHeader(wrapper) {
@@ -345,6 +406,7 @@ const UI = (() => {
     updateGastosTotal,
     renderBanksGrid,
     renderCompareTable,
+    renderBankFilter,
     fmtEur, fmtPct,
     escapeHtml,
   };

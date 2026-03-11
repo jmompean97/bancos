@@ -14,30 +14,62 @@ const App = (() => {
         conditions: null,
         banks: [],
         editingIndex: null,
+        hiddenBanks: new Set(), // indices de bancos ocultos en la tabla
     };
 
     // ─── Persistencia: guarda local + Gist ─────
+    // Debounce + mutex para evitar PATCHes concurrentes (409 Conflict)
+    let _gistDebounceTimer = null;
+    let _gistWriting = false;
+    let _gistPending = false;
+
+    async function _flushGist() {
+        if (_gistWriting) {
+            // Hay un PATCH en curso: marcar que hay datos pendientes y salir
+            _gistPending = true;
+            return;
+        }
+        _gistWriting = true;
+        _gistPending = false;
+        const data = { conditions: state.conditions, banks: state.banks };
+        UI.setSyncStatus('syncing');
+        try {
+            await Gist.write(data);
+            UI.setSyncStatus('synced');
+        } catch (err) {
+            console.error('Gist sync error:', err);
+            UI.setSyncStatus('error');
+            UI.showToast(`⚠️ Error al sincronizar: ${err.message}`, 'error');
+        } finally {
+            _gistWriting = false;
+            // Si mientras escribíamos llegaron más cambios, volver a enviar
+            if (_gistPending) {
+                _gistPending = false;
+                _flushGist();
+            }
+        }
+    }
+
+    function _scheduleGistWrite() {
+        clearTimeout(_gistDebounceTimer);
+        _gistDebounceTimer = setTimeout(_flushGist, 800);
+    }
+
     async function persist() {
         const data = { conditions: state.conditions, banks: state.banks };
         // 1. Siempre guardar en IndexedDB (local, inmediato)
         await DB.save('session', data);
-        // 2. Si hay Gist configurado, sincronizar en la nube
+        // 2. Si hay Gist configurado, encolar escritura en la nube
         if (Gist.isConfigured()) {
-            UI.setSyncStatus('syncing');
-            try {
-                await Gist.write(data);
-                UI.setSyncStatus('synced');
-            } catch (err) {
-                console.error('Gist sync error:', err);
-                UI.setSyncStatus('error');
-                UI.showToast(`⚠️ Error al sincronizar: ${err.message}`, 'error');
-            }
+            _scheduleGistWrite();
         }
     }
 
     function refresh() {
         UI.renderBanksGrid(state.banks);
-        UI.renderCompareTable(state.banks, state.conditions);
+        const visibleBanks = state.banks.filter((_, i) => !state.hiddenBanks.has(i));
+        UI.renderBankFilter(state.banks, state.hiddenBanks);
+        UI.renderCompareTable(visibleBanks, state.conditions);
     }
 
     async function persistAndRefresh() {
@@ -114,17 +146,12 @@ const App = (() => {
             'fija-bon-interes', 'fija-bon-cuota', 'fija-bon-total',
             'fija-nobon-interes', 'fija-nobon-cuota', 'fija-nobon-total',
             'fija-nobon-amort-0-10', 'fija-nobon-amort-resto',
-            'mixta-bon-total', 'mixta-bon-anios-fija', 'mixta-bon-interes-fija', 'mixta-bon-cuota-fija',
-            'mixta-bon-anios-variable', 'mixta-bon-interes-variable', 'mixta-bon-cuota-variable',
-            'mixta-nobon-total', 'mixta-nobon-anios-fija', 'mixta-nobon-interes-fija', 'mixta-nobon-cuota-fija',
-            'mixta-nobon-anios-variable', 'mixta-nobon-interes-variable', 'mixta-nobon-cuota-variable',
-            'mixta-nobon-amort-0-10', 'mixta-nobon-amort-resto',
-            'gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd',
+            'gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura', 'gasto-notas',
             'bon-nomina-reduction', 'bon-vida-reduction', 'bon-hogar-reduction', 'bon-tarjeta-reduction',
             'bon-vida-coste', 'bon-hogar-coste', 'bon-tarjeta-coste',
             'bon-alarma-reduction', 'bon-alarma-coste',
             'bon-spp-reduction', 'bon-spp-coste',
-            'bon-fondos-reduction', 'bon-fondos-minimo'
+            'bon-fondos-reduction', 'bon-fondos-minimo', 'bon-notas'
         ].forEach(id => sv(id, ''));
         ['bon-nomina-check', 'bon-vida-check', 'bon-hogar-check', 'bon-tarjeta-check', 'bon-alarma-check', 'bon-spp-check', 'bon-fondos-check'].forEach(id => sc(id, false));
         ['bon-nomina-reduction', 'bon-vida-reduction', 'bon-hogar-reduction', 'bon-tarjeta-reduction', 'bon-alarma-reduction', 'bon-spp-reduction', 'bon-fondos-reduction'].forEach(id => {
@@ -139,17 +166,10 @@ const App = (() => {
         sv('fija-bon-interes', b.fijaBon?.interes); sv('fija-bon-cuota', b.fijaBon?.cuota); sv('fija-bon-total', b.fijaBon?.total);
         sv('fija-nobon-interes', b.fijaNobon?.interes); sv('fija-nobon-cuota', b.fijaNobon?.cuota); sv('fija-nobon-total', b.fijaNobon?.total);
         sv('fija-nobon-amort-0-10', b.fijaNobon?.amort010); sv('fija-nobon-amort-resto', b.fijaNobon?.amortResto);
-        sv('mixta-bon-total', b.mixtaBon?.total); sv('mixta-bon-anios-fija', b.mixtaBon?.aniosFija);
-        sv('mixta-bon-interes-fija', b.mixtaBon?.interesFija); sv('mixta-bon-cuota-fija', b.mixtaBon?.cuotaFija);
-        sv('mixta-bon-anios-variable', b.mixtaBon?.aniosVar); sv('mixta-bon-interes-variable', b.mixtaBon?.interesVar);
-        sv('mixta-bon-cuota-variable', b.mixtaBon?.cuotaVar);
-        sv('mixta-nobon-total', b.mixtaNobon?.total); sv('mixta-nobon-anios-fija', b.mixtaNobon?.aniosFija);
-        sv('mixta-nobon-interes-fija', b.mixtaNobon?.interesFija); sv('mixta-nobon-cuota-fija', b.mixtaNobon?.cuotaFija);
-        sv('mixta-nobon-anios-variable', b.mixtaNobon?.aniosVar); sv('mixta-nobon-interes-variable', b.mixtaNobon?.interesVar);
-        sv('mixta-nobon-cuota-variable', b.mixtaNobon?.cuotaVar); sv('mixta-nobon-amort-0-10', b.mixtaNobon?.amort010);
-        sv('mixta-nobon-amort-resto', b.mixtaNobon?.amortResto);
         sv('gasto-tasacion', b.gastos?.tasacion); sv('gasto-registro', b.gastos?.registro);
-        sv('gasto-notaria', b.gastos?.notaria); sv('gasto-gestoria', b.gastos?.gestoria); sv('gasto-ajd', b.gastos?.ajd);
+        sv('gasto-notaria', b.gastos?.notaria); sv('gasto-gestoria', b.gastos?.gestoria);
+        sv('gasto-ajd', b.gastos?.ajd); sv('gasto-apertura', b.gastos?.apertura);
+        sv('gasto-notas', b.gastos?.notas);
         sc('bon-nomina-check', b.bonificaciones?.nominaActiva); sv('bon-nomina-reduction', b.bonificaciones?.nominaReduction);
         sc('bon-vida-check', b.bonificaciones?.vidaActiva); sv('bon-vida-reduction', b.bonificaciones?.vidaReduction);
         sc('bon-hogar-check', b.bonificaciones?.hogarActiva); sv('bon-hogar-reduction', b.bonificaciones?.hogarReduction);
@@ -163,6 +183,7 @@ const App = (() => {
         sv('bon-alarma-coste', b.bonificaciones?.alarmaCoste);
         sv('bon-spp-coste', b.bonificaciones?.sppCoste);
         sv('bon-fondos-minimo', b.bonificaciones?.fondosMinimo);
+        sv('bon-notas', b.bonificaciones?.notas);
         ['nomina', 'vida', 'hogar', 'tarjeta', 'alarma', 'spp', 'fondos'].forEach(k => {
             const check = document.getElementById(`bon-${k}-check`);
             const input = document.getElementById(`bon-${k}-reduction`);
@@ -179,20 +200,10 @@ const App = (() => {
                 interes: gv('fija-nobon-interes'), cuota: gv('fija-nobon-cuota'), total: gv('fija-nobon-total'),
                 amort010: gv('fija-nobon-amort-0-10'), amortResto: gv('fija-nobon-amort-resto')
             },
-            mixtaBon: {
-                total: gv('mixta-bon-total'), aniosFija: gv('mixta-bon-anios-fija'), interesFija: gv('mixta-bon-interes-fija'),
-                cuotaFija: gv('mixta-bon-cuota-fija'), aniosVar: gv('mixta-bon-anios-variable'),
-                interesVar: gv('mixta-bon-interes-variable'), cuotaVar: gv('mixta-bon-cuota-variable')
-            },
-            mixtaNobon: {
-                total: gv('mixta-nobon-total'), aniosFija: gv('mixta-nobon-anios-fija'), interesFija: gv('mixta-nobon-interes-fija'),
-                cuotaFija: gv('mixta-nobon-cuota-fija'), aniosVar: gv('mixta-nobon-anios-variable'),
-                interesVar: gv('mixta-nobon-interes-variable'), cuotaVar: gv('mixta-nobon-cuota-variable'),
-                amort010: gv('mixta-nobon-amort-0-10'), amortResto: gv('mixta-nobon-amort-resto')
-            },
             gastos: {
                 tasacion: gv('gasto-tasacion'), registro: gv('gasto-registro'), notaria: gv('gasto-notaria'),
-                gestoria: gv('gasto-gestoria'), ajd: gv('gasto-ajd')
+                gestoria: gv('gasto-gestoria'), ajd: gv('gasto-ajd'), apertura: gv('gasto-apertura'),
+                notas: gv('gasto-notas')
             },
             bonificaciones: {
                 nominaActiva: document.getElementById('bon-nomina-check')?.checked,
@@ -208,6 +219,7 @@ const App = (() => {
                 fondosReduction: gv('bon-fondos-reduction'),
                 vidaCoste: gv('bon-vida-coste'), hogarCoste: gv('bon-hogar-coste'), tarjetaCoste: gv('bon-tarjeta-coste'),
                 alarmaCoste: gv('bon-alarma-coste'), sppCoste: gv('bon-spp-coste'), fondosMinimo: gv('bon-fondos-minimo'),
+                notas: gv('bon-notas'),
             },
         };
     }
@@ -255,6 +267,30 @@ const App = (() => {
         state.banks.forEach((b, i) => b.color = i % COLORS);
         UI.showToast(`${name} eliminado`);
         await persistAndRefresh();
+    }
+
+    async function reorderBanks(fromIndex, toIndex) {
+        const moved = state.banks.splice(fromIndex, 1)[0];
+        state.banks.splice(toIndex, 0, moved);
+        state.banks.forEach((b, i) => b.color = i % COLORS);
+        // Remap hiddenBanks after reorder
+        const newHidden = new Set();
+        state.banks.forEach((_, newIdx) => {
+            // not trivially remappable — reset visibility on reorder
+        });
+        state.hiddenBanks = newHidden;
+        await persistAndRefresh();
+    }
+
+    function toggleBankVisibility(index) {
+        if (state.hiddenBanks.has(index)) {
+            state.hiddenBanks.delete(index);
+        } else {
+            state.hiddenBanks.add(index);
+        }
+        const visibleBanks = state.banks.filter((_, i) => !state.hiddenBanks.has(i));
+        UI.renderBankFilter(state.banks, state.hiddenBanks);
+        UI.renderCompareTable(visibleBanks, state.conditions);
     }
 
     // ─── Export / Import JSON ───────────────────
@@ -493,7 +529,7 @@ const App = (() => {
         }
 
         // Attach live gastosTotal listeners
-        ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd'].forEach(id => {
+        ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura'].forEach(id => {
             document.getElementById(id)?.addEventListener('input', UI.updateGastosTotal);
         });
 
@@ -531,7 +567,8 @@ const App = (() => {
         saveConditions,
         openAddBankModal, openEditBankModal, closeBankModal, closeModalOnOverlay,
         switchTab, toggleBonif,
-        saveBank, deleteBank,
+        saveBank, deleteBank, reorderBanks,
+        toggleBankVisibility,
         exportJSON, importJSON, resetAll,
         openGistModal, closeGistModal, closeGistModalOnOverlay,
         connectGist, disconnectGist,

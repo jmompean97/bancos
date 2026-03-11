@@ -40,10 +40,6 @@
         justify-content: center;
     }
 
-    .header-subtitle {
-        display: none;
-    }
-
     .header-actions {
         width: 100%;
         justify-content: center;

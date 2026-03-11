@@ -54,13 +54,6 @@
   letter-spacing: -0.02em;
 }
 
-.header-subtitle {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  border-left: 1px solid var(--border-color);
-  padding-left: 2rem;
-}
-
 .header-actions {
   margin-left: auto;
   display: flex;

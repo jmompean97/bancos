@@ -33,7 +33,6 @@
                 </div>
                 <span class="logo-text">BancoComp</span>
             </div>
-            <p class="header-subtitle">Comparador de hipotecas inteligente</p>
 
             <!-- Sync status pill -->
             <div class="sync-status sync-offline" id="sync-status">
@@ -208,6 +207,7 @@
                     </button>
                 </div>
             </div>
+            <div id="bank-filter" class="bank-filter" style="display:none;"></div>
             <div class="compare-wrapper" id="compare-wrapper"></div>
         </section>
 
@@ -238,8 +238,7 @@
                 <div class="tab-nav" role="tablist">
                     <button class="tab-btn active" role="tab" onclick="App.switchTab('fija')" id="tab-fija">Hipoteca
                         Fija</button>
-                    <button class="tab-btn" role="tab" onclick="App.switchTab('mixta')" id="tab-mixta">Hipoteca
-                        Mixta</button>
+
                     <button class="tab-btn" role="tab" onclick="App.switchTab('gastos')" id="tab-gastos">Otros
                         Gastos</button>
                     <button class="tab-btn" role="tab" onclick="App.switchTab('bonificaciones')"
@@ -284,85 +283,7 @@
                     </div>
                 </div>
 
-                <!-- TAB: Hipoteca Mixta -->
-                <div class="tab-panel" id="panel-mixta">
-                    <div class="panel-subheader"><span class="badge badge-green">Bonificada</span><span
-                            class="panel-subheader-label">Hipoteca Mixta — <span id="plazo-label-3">20</span>
-                            años</span></div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Total a pagar (€)</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-bon-total"
-                                placeholder="210.000" /></div>
-                    </div>
-                    <div class="form-row tramo-row">
-                        <div class="tramo-label">Tramo Fijo</div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Años fija</label><input class="form-input"
-                                type="number" id="mixta-bon-anios-fija" placeholder="10" /></div>
-                        <div class="form-group"><label class="form-label">% Interés fija</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-bon-interes-fija"
-                                placeholder="2.10" /></div>
-                        <div class="form-group"><label class="form-label">Cuota mensual fija (€)</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-bon-cuota-fija"
-                                placeholder="870" /></div>
-                    </div>
-                    <div class="form-row tramo-row">
-                        <div class="tramo-label">Tramo Variable</div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Años variable</label><input class="form-input"
-                                type="number" id="mixta-bon-anios-variable" placeholder="10" /></div>
-                        <div class="form-group"><label class="form-label">% Interés variable</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-bon-interes-variable"
-                                placeholder="0.85" /></div>
-                        <div class="form-group"><label class="form-label">Cuota mensual variable (€)</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-bon-cuota-variable"
-                                placeholder="920" /></div>
-                    </div>
-                    <div class="panel-subheader"><span class="badge badge-orange">No bonificada</span><span
-                            class="panel-subheader-label">Hipoteca Mixta — <span id="plazo-label-4">20</span>
-                            años</span></div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Total a pagar (€)</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-nobon-total"
-                                placeholder="230.000" /></div>
-                    </div>
-                    <div class="form-row tramo-row">
-                        <div class="tramo-label">Tramo Fijo</div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Años fija</label><input class="form-input"
-                                type="number" id="mixta-nobon-anios-fija" placeholder="10" /></div>
-                        <div class="form-group"><label class="form-label">% Interés fija</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-nobon-interes-fija"
-                                placeholder="2.80" /></div>
-                        <div class="form-group"><label class="form-label">Cuota mensual fija (€)</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-nobon-cuota-fija"
-                                placeholder="930" /></div>
-                    </div>
-                    <div class="form-row tramo-row">
-                        <div class="tramo-label">Tramo Variable</div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Años variable</label><input class="form-input"
-                                type="number" id="mixta-nobon-anios-variable" placeholder="10" /></div>
-                        <div class="form-group"><label class="form-label">% Interés variable</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-nobon-interes-variable"
-                                placeholder="1.10" /></div>
-                        <div class="form-group"><label class="form-label">Cuota mensual variable (€)</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-nobon-cuota-variable"
-                                placeholder="980" /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Amortización 0-10 años (%)</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-nobon-amort-0-10"
-                                placeholder="2" /></div>
-                        <div class="form-group"><label class="form-label">Amortización resto (%)</label><input
-                                class="form-input" type="number" step="0.01" id="mixta-nobon-amort-resto"
-                                placeholder="1.5" /></div>
-                    </div>
-                </div>
+
 
                 <!-- TAB: Otros Gastos -->
                 <div class="tab-panel" id="panel-gastos">
@@ -386,7 +307,16 @@
                     <div class="form-row">
                         <div class="form-group"><label class="form-label">Impuesto AJD (€)</label><input
                                 class="form-input" type="number" step="0.01" id="gasto-ajd" placeholder="0" /></div>
-                        <div class="form-group"></div>
+                        <div class="form-group"><label class="form-label">Comisión de apertura (€)</label><input
+                                class="form-input" type="number" step="0.01" id="gasto-apertura" placeholder="0" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label" for="gasto-notas">Anotaciones varias</label>
+                            <textarea class="form-input form-textarea" id="gasto-notas"
+                                placeholder="Notas adicionales sobre gastos..."></textarea>
+                        </div>
                     </div>
                     <div class="total-gastos-preview" id="total-gastos-preview">
                         <span>Total otros gastos:</span><strong id="total-gastos-val">0,00 €</strong>
@@ -446,16 +376,16 @@
                         <div class="bonif-item">
                             <div class="bonif-header"><label class="bonif-label"><input type="checkbox"
                                         id="bon-spp-check" class="bonif-check"
-                                        onchange="App.toggleBonif('sppReduction')" /><span
-                                        class="bonif-name">Prot. de pagos</span></label></div>
+                                        onchange="App.toggleBonif('sppReduction')" /><span class="bonif-name">Prot. de
+                                        pagos</span></label></div>
                             <input class="form-input bonif-input" type="number" step="0.01" id="bon-spp-reduction"
                                 placeholder="0.15 %" disabled />
                         </div>
                         <div class="bonif-item">
                             <div class="bonif-header"><label class="bonif-label"><input type="checkbox"
                                         id="bon-fondos-check" class="bonif-check"
-                                        onchange="App.toggleBonif('fondosReduction')" /><span
-                                        class="bonif-name">F. Inversión</span></label></div>
+                                        onchange="App.toggleBonif('fondosReduction')" /><span class="bonif-name">F.
+                                        Inversión</span></label></div>
                             <input class="form-input bonif-input" type="number" step="0.01" id="bon-fondos-reduction"
                                 placeholder="0.10 %" disabled />
                         </div>
@@ -483,7 +413,15 @@
                                 class="form-input" type="number" step="0.01" id="bon-spp-coste" placeholder="800" />
                         </div>
                         <div class="form-group"><label class="form-label">F. Inversión (dinero mín. €)</label><input
-                                class="form-input" type="number" step="0.01" id="bon-fondos-minimo" placeholder="5000" />
+                                class="form-input" type="number" step="0.01" id="bon-fondos-minimo"
+                                placeholder="5000" />
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top:1.5rem;">
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label" for="bon-notas">Anotaciones varias</label>
+                            <textarea class="form-input form-textarea" id="bon-notas"
+                                placeholder="Notas adicionales sobre bonificaciones..."></textarea>
                         </div>
                     </div>
                 </div>

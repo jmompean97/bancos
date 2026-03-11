@@ -271,6 +271,128 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
+/* Drag & Drop states */
+.bank-card.dragging {
+  opacity: 0.35;
+  transform: scale(0.97);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  cursor: grabbing;
+}
+
+.bank-card.drag-over {
+  border-color: rgba(59, 130, 246, 0.7);
+  background: rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35), 0 8px 30px rgba(59, 130, 246, 0.15);
+  transform: translateY(-3px);
+}
+
+/* Drag handle */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--text-muted);
+  cursor: grab;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  margin-right: 0.4rem;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.drag-handle:hover {
+  color: var(--text-secondary);
+  background: var(--glass);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-handle svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+/* Textarea de formulario */
+.form-textarea {
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.5;
+}
+
+/* ─── Bank Filter Bar ─────────────────────────────── */
+.bank-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(15, 24, 41, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
+.bank-filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  margin-right: 0.25rem;
+}
+
+.bank-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: var(--font-main);
+  transition: all 0.18s ease;
+}
+
+.chip-visible {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--accent-blue-light);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.chip-visible:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.chip-hidden {
+  background: var(--glass);
+  color: var(--text-muted);
+  border-color: var(--glass-border);
+  opacity: 0.5;
+}
+
+.chip-hidden:hover {
+  opacity: 0.8;
+  border-color: var(--border-color);
+}
+
+/* Anotaciones en tabla */
+.table-notes {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .bank-card-header {
   display: flex;
   align-items: center;
@@ -842,10 +964,6 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .header-subtitle {
-    display: none;
-  }
-
   .section-header {
     flex-wrap: wrap;
   }
@@ -1278,10 +1396,6 @@
 
     .conditions-grid {
       grid-template-columns: 1fr 1fr;
-    }
-
-    .header-subtitle {
-      display: none;
     }
 
     .section-header {
