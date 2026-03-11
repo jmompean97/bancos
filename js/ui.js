@@ -343,7 +343,7 @@ const UI = (() => {
     el.style.display = 'block';
 
     const wasOpen = el.querySelector('details')?.open ?? window.innerWidth > 800;
-    
+
     el.innerHTML = `
       <details class="bank-filter-details" ${wasOpen ? 'open' : ''}>
         <summary class="bank-filter-summary">
@@ -355,10 +355,10 @@ const UI = (() => {
         </summary>
         <div class="bank-filter-chips">
           ${banks.map((b, i) => {
-            const hidden = hiddenBanks.has(i);
-            const dot = `<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${colorGradient(b.color)};"></span>`;
-            return `<button class="bank-filter-chip ${hidden ? 'chip-hidden' : 'chip-visible'}" onclick="App.toggleBankVisibility(${i})" title="${hidden ? 'Mostrar' : 'Ocultar'} ${escapeHtml(b.name)}">${dot}${escapeHtml(b.name)}</button>`;
-          }).join('')}
+      const hidden = hiddenBanks.has(i);
+      const dot = `<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${colorGradient(b.color)};"></span>`;
+      return `<button class="bank-filter-chip ${hidden ? 'chip-hidden' : 'chip-visible'}" onclick="App.toggleBankVisibility(${i})" title="${hidden ? 'Mostrar' : 'Ocultar'} ${escapeHtml(b.name)}">${dot}${escapeHtml(b.name)}</button>`;
+    }).join('')}
         </div>
       </details>
     `;
@@ -406,7 +406,7 @@ const UI = (() => {
       bar.style.right = 'auto'; // overriding any previous 'right' usage
 
       // The cloned inner table needs to scale to its contents
-      innerTable.style.width = 'auto'; 
+      innerTable.style.width = 'auto';
       // Translate the inner table by negative scroll offset
       innerTable.style.transform = `translateX(-${wrapper.scrollLeft}px)`;
 
@@ -429,7 +429,7 @@ const UI = (() => {
 
       // Show when the bottom edge of the real thead has gone above the navbar
       if (thead.getBoundingClientRect().bottom <= navHeight) {
-        bar.style.top = navHeight + 'px';
+        bar.style.top = navHeight + 17 + 'px';
         syncAndShow();
       } else {
         hide();
