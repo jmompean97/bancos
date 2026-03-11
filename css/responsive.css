@@ -142,13 +142,4 @@
         justify-content: center;
         margin-top: 0.5rem;
     }
-
-    .euribor-widget {
-        flex-direction: column;
-    }
-
-    .btn-euribor {
-        width: 100%;
-        padding: 0.5rem;
-    }
 }

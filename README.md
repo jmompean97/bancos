@@ -67,10 +67,7 @@ cd bancos
   - % Interés, cuota mensual, total a pagar
   - Comisiones de amortización anticipada (tramos 0-10 años y resto)
 
-- **Hipoteca Mixta** — Bonificada y No Bonificada
-  - Tramo fijo: años, % interés, cuota mensual
-  - Tramo variable: años, % interés, cuota mensual
-  - Total a pagar global
+
 
 ### 💸 Otros gastos asociados
 
@@ -145,7 +142,7 @@ bancos/
 │   ├── ui.js       # Renderizado de UI y eventos
 │   ├── db.js       # Capa de almacenamiento en IndexedDB
 │   ├── gist.js     # Cliente API de GitHub Gist
-│   └── euribor.js  # Integración con la API oficial del BCE
+
 └── README.md       # Este archivo
 ```
 
@@ -155,12 +152,14 @@ bancos/
 
 ## 🎨 Diseño
 
-- **Tema dark** con fondo `#0a0e1a` y gradientes azul-morado
+- **Light y Dark Mode** soportados con switch en tiempo real
+- **Layout principal** fluido hasta 1550px para aprovechar monitores anchos
 - **Glassmorphism** en tarjetas y modales (`backdrop-filter: blur`)
 - **Tipografía**: Inter + Space Grotesk (Google Fonts)
 - **Animaciones**: `fadeInUp` en secciones, `cardIn` en tarjetas de banco, rebote en modal
 - **Colores por banco**: 6 paletas de gradiente únicas, asignadas automáticamente
 - **Responsive**: adaptado a móvil, tablet y escritorio
+
 
 ---
 
@@ -182,7 +181,6 @@ https://jmompean97.github.io/bancos/
 ## 🔭 Roadmap / Ideas futuras
 
 - [x] **Sincronización via GitHub Gist** — guarda el JSON en un Gist privado tuyo y sincroniza automáticamente usando tu Personal Access Token
-- [x] **Euríbor en tiempo real** — integración directa con la API oficial del Banco Central Europeo (BCE)
 - [ ] **Modo comparación visual con gráficos** — barras o radar chart para ver rápidamente qué banco gana en cada categoría
 - [ ] **Calculadora de cuota** — calcula la cuota mensual automáticamente dado importe, plazo y tipo de interés
 - [ ] **Ahorro real con bonificaciones** — calcula si compensa contratar cada producto vinculado (reducción de interés vs coste anual del seguro)

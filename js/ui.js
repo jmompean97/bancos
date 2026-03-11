@@ -69,19 +69,19 @@ const UI = (() => {
   // ─── Conditions summary ─────────────────────
   function applyConditionsToUI(conditions) {
     if (!conditions) return;
-    const { importe, inmueble, plazo, euribor } = conditions;
+    const { importe, inmueble, plazo } = conditions;
     const pct = inmueble ? ((importe / inmueble) * 100).toFixed(1) + ' %' : '—';
     const $ = (id) => document.getElementById(id);
     $('sum-importe').textContent = fmtEur(importe) || '—';
     $('sum-inmueble').textContent = fmtEur(inmueble) || '—';
     $('sum-financiacion').textContent = pct;
     $('sum-plazo').textContent = plazo ? plazo + ' años' : '—';
-    $('sum-euribor').textContent = euribor ? euribor + ' %' : '—';
+
     $('conditions-summary').style.display = 'flex';
     $('importe').value = importe || '';
     $('valor-inmueble').value = inmueble || '';
     $('plazo').value = plazo || '';
-    $('euribor').value = euribor || '';
+
     document.querySelectorAll('[id^="plazo-label-"]').forEach(el => {
       el.textContent = plazo;
     });

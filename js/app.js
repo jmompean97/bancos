@@ -90,12 +90,11 @@ const App = (() => {
         const importe = parseFloat(document.getElementById('importe').value);
         const inmueble = parseFloat(document.getElementById('valor-inmueble').value);
         const plazo = parseInt(document.getElementById('plazo').value);
-        const euribor = parseFloat(document.getElementById('euribor').value);
         if (!importe || !plazo) {
             UI.showToast('Introduce al menos el importe y el plazo', 'error');
             return;
         }
-        state.conditions = { importe, inmueble, plazo, euribor };
+        state.conditions = { importe, inmueble, plazo };
         UI.applyConditionsToUI(state.conditions);
         UI.showToast('✓ Condiciones guardadas', 'success');
         await persistAndRefresh();
@@ -348,7 +347,7 @@ const App = (() => {
         if (!confirm('¿Borrar todos los datos y empezar de cero?')) return;
         state.conditions = null;
         state.banks = [];
-        ['importe', 'valor-inmueble', 'plazo', 'euribor'].forEach(id => sv(id, ''));
+        ['importe', 'valor-inmueble', 'plazo'].forEach(id => sv(id, ''));
         document.getElementById('conditions-summary').style.display = 'none';
         await DB.remove('session');
         refresh();
@@ -358,46 +357,6 @@ const App = (() => {
         UI.showToast('Datos borrados', 'info');
     }
 
-    // ─── Euríbor BCE ───────────────────────────
-    // Convierte el período mensual del BCE ("2026-02") en texto legible ("feb 2026")
-    function formatPeriod(period) {
-        if (!period) return '';
-        const [y, m] = period.split('-');
-        if (!y || !m) return period;
-        const mes = new Date(+y, +m - 1, 1).toLocaleDateString('es-ES', { month: 'short' });
-        return `${mes} ${y}`;
-    }
-    async function fetchEuribor() {
-        const btn = document.getElementById('btn-euribor');
-        const input = document.getElementById('euribor');
-        const badge = document.getElementById('euribor-badge');
-
-        if (btn) { btn.disabled = true; btn.classList.add('loading'); }
-        if (badge) { badge.textContent = 'Consultando BCE…'; badge.className = 'euribor-badge'; }
-
-        try {
-            const data = await Euribor.fetch('12m');
-            if (!data) throw new Error('Sin datos');
-            if (input) {
-                input.disabled = false;
-                input.value = data.value;
-                input.disabled = true;
-            }
-            if (badge) {
-                badge.textContent = `Euríbor 12 meses: ${data.value} % · Media de ${formatPeriod(data.period)} · Fuente: BCE`;
-                badge.className = 'euribor-badge euribor-badge--ok';
-            }
-            UI.showToast(`✓ Euríbor 12 meses: ${data.value} %`, 'success');
-        } catch (err) {
-            if (badge) {
-                badge.textContent = 'No se pudo obtener el dato del BCE';
-                badge.className = 'euribor-badge euribor-badge--error';
-            }
-            UI.showToast('Error al obtener Euríbor del BCE', 'error');
-        } finally {
-            if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
-        }
-    }
 
     // ─── Modal Gist Config ───────────────────────
     function openGistModal() {
@@ -549,21 +508,6 @@ const App = (() => {
             if (e.key === 'Escape') { closeBankModal(); closeGistModal(); }
         });
 
-        // Auto-fetch Euríbor al arrancar (con caché de 6h)
-        Euribor.load().then(data => {
-            if (data?.['12m']) {
-                const input = document.getElementById('euribor');
-                const badge = document.getElementById('euribor-badge');
-                if (input && !input.value) {
-                    input.value = data['12m'].value;
-                    if (badge) {
-                        badge.textContent = `Euríbor 12 meses: ${data['12m'].value} % · Media de ${formatPeriod(data['12m'].period)} · Fuente: BCE`;
-                        badge.className = 'euribor-badge euribor-badge--ok';
-                    }
-                }
-            }
-        }).catch(() => { });
-
         // Restore UI
         UI.applyConditionsToUI(state.conditions);
         refresh();
@@ -583,7 +527,6 @@ const App = (() => {
         exportJSON, importJSON, resetAll,
         openGistModal, closeGistModal, closeGistModalOnOverlay,
         connectGist, disconnectGist,
-        fetchEuribor,
         init,
     };
 
