@@ -153,7 +153,7 @@ const App = (() => {
             'fija-bon-interes', 'fija-bon-cuota', 'fija-bon-total',
             'fija-nobon-interes', 'fija-nobon-cuota', 'fija-nobon-total',
             'fija-nobon-amort-0-10', 'fija-nobon-amort-resto',
-            'gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura', 'gasto-notas',
+            'gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura', 'gasto-extras', 'gasto-notas',
             'bon-nomina-reduction', 'bon-vida-reduction', 'bon-hogar-reduction', 'bon-tarjeta-reduction',
             'bon-vida-coste', 'bon-hogar-coste', 'bon-tarjeta-coste',
             'bon-alarma-reduction', 'bon-alarma-coste',
@@ -175,7 +175,7 @@ const App = (() => {
         sv('fija-nobon-amort-0-10', b.fijaNobon?.amort010); sv('fija-nobon-amort-resto', b.fijaNobon?.amortResto);
         sv('gasto-tasacion', b.gastos?.tasacion); sv('gasto-registro', b.gastos?.registro);
         sv('gasto-notaria', b.gastos?.notaria); sv('gasto-gestoria', b.gastos?.gestoria);
-        sv('gasto-ajd', b.gastos?.ajd); sv('gasto-apertura', b.gastos?.apertura);
+        sv('gasto-ajd', b.gastos?.ajd); sv('gasto-apertura', b.gastos?.apertura); sv('gasto-extras', b.gastos?.extras);
         sv('gasto-notas', b.gastos?.notas);
         sc('bon-nomina-check', b.bonificaciones?.nominaActiva); sv('bon-nomina-reduction', b.bonificaciones?.nominaReduction);
         sc('bon-vida-check', b.bonificaciones?.vidaActiva); sv('bon-vida-reduction', b.bonificaciones?.vidaReduction);
@@ -209,7 +209,7 @@ const App = (() => {
             },
             gastos: {
                 tasacion: gv('gasto-tasacion'), registro: gv('gasto-registro'), notaria: gv('gasto-notaria'),
-                gestoria: gv('gasto-gestoria'), ajd: gv('gasto-ajd'), apertura: gv('gasto-apertura'),
+                gestoria: gv('gasto-gestoria'), ajd: gv('gasto-ajd'), apertura: gv('gasto-apertura'), extras: gv('gasto-extras'),
                 notas: gv('gasto-notas')
             },
             bonificaciones: {
@@ -499,7 +499,7 @@ const App = (() => {
         }
 
         // Attach live gastosTotal listeners
-        ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura'].forEach(id => {
+        ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura', 'gasto-extras'].forEach(id => {
             document.getElementById(id)?.addEventListener('input', UI.updateGastosTotal);
         });
 

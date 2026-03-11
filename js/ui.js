@@ -89,7 +89,7 @@ const UI = (() => {
 
   // ─── Gastos total live ──────────────────────
   function updateGastosTotal() {
-    const ids = ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura'];
+    const ids = ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura', 'gasto-extras'];
     const total = ids.reduce((s, id) => s + (parseFloat(document.getElementById(id)?.value) || 0), 0);
     const el = document.getElementById('total-gastos-val');
     if (el) el.textContent = total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -113,7 +113,7 @@ const UI = (() => {
       const totalFijaBon = b.fijaBon?.total ? fmtEur(b.fijaBon.total) : null;
       const gastos = b.gastos;
       const totalGastos = gastos
-        ? [gastos.tasacion, gastos.registro, gastos.notaria, gastos.gestoria, gastos.ajd]
+        ? [gastos.tasacion, gastos.registro, gastos.notaria, gastos.gestoria, gastos.ajd, gastos.apertura, gastos.extras]
           .reduce((s, v) => s + (parseFloat(v) || 0), 0)
         : 0;
       const bonActivas = [];
@@ -266,7 +266,7 @@ const UI = (() => {
     }
     function totalGastos(b) {
       const g = b.gastos; if (!g) return null;
-      const t = [g.tasacion, g.registro, g.notaria, g.gestoria, g.ajd]
+      const t = [g.tasacion, g.registro, g.notaria, g.gestoria, g.ajd, g.apertura, g.extras]
         .reduce((s, v) => s + (parseFloat(v) || 0), 0);
       return t > 0 ? t : null;
     }
@@ -308,6 +308,7 @@ const UI = (() => {
           ${row('Gestoría', b => b.gastos?.gestoria, fmtEur, bestMin, worstMax)}
           ${row('Impuesto AJD', b => b.gastos?.ajd, fmtEur, bestMin, worstMax)}
           ${row('Comisión de apertura', b => b.gastos?.apertura, fmtEur, bestMin, worstMax)}
+          ${row('Otros extras', b => b.gastos?.extras, fmtEur, bestMin, worstMax)}
           ${row('TOTAL otros gastos', totalGastos, fmtEur, bestMin, worstMax)}
           ${row('Anotaciones', b => b.gastos?.notas || null, v => `<span class="table-notes">${escapeHtml(v)}</span>`, null, null)}
 
