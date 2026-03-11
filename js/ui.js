@@ -340,14 +340,27 @@ const UI = (() => {
     const el = document.getElementById('bank-filter');
     if (!el) return;
     if (!banks || banks.length === 0) { el.style.display = 'none'; return; }
-    el.style.display = 'flex';
+    el.style.display = 'block';
+
+    const wasOpen = el.querySelector('details')?.open ?? window.innerWidth > 800;
+    
     el.innerHTML = `
-      <span class="bank-filter-label">Mostrar en tabla:</span>
-      ${banks.map((b, i) => {
-      const hidden = hiddenBanks.has(i);
-      const dot = `<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${colorGradient(b.color)};"></span>`;
-      return `<button class="bank-filter-chip ${hidden ? 'chip-hidden' : 'chip-visible'}" onclick="App.toggleBankVisibility(${i})" title="${hidden ? 'Mostrar' : 'Ocultar'} ${escapeHtml(b.name)}">${dot}${escapeHtml(b.name)}</button>`;
-    }).join('')}
+      <details class="bank-filter-details" ${wasOpen ? 'open' : ''}>
+        <summary class="bank-filter-summary">
+          <div class="summary-left">
+             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4H21M6 12H18M9 20H15"/></svg>
+             <span class="bank-filter-label">Mostrar en tabla (${banks.length - hiddenBanks.size}/${banks.length})</span>
+          </div>
+          <svg class="summary-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="bank-filter-chips">
+          ${banks.map((b, i) => {
+            const hidden = hiddenBanks.has(i);
+            const dot = `<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${colorGradient(b.color)};"></span>`;
+            return `<button class="bank-filter-chip ${hidden ? 'chip-hidden' : 'chip-visible'}" onclick="App.toggleBankVisibility(${i})" title="${hidden ? 'Mostrar' : 'Ocultar'} ${escapeHtml(b.name)}">${dot}${escapeHtml(b.name)}</button>`;
+          }).join('')}
+        </div>
+      </details>
     `;
   }
 
@@ -368,25 +381,55 @@ const UI = (() => {
     bar.appendChild(innerTable);
     document.body.appendChild(bar);
 
-    const NAVBAR_H = 64;
-
     function syncAndShow() {
       const realThs = thead.querySelectorAll('th');
       const cloneThs = bar.querySelectorAll('th');
       const tableRect = table.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
+
       realThs.forEach((th, i) => {
-        if (cloneThs[i]) cloneThs[i].style.width = th.getBoundingClientRect().width + 'px';
+        if (cloneThs[i]) {
+          const rect = th.getBoundingClientRect();
+          // Ensure exact width syncing without being overridden by CSS limits
+          cloneThs[i].style.width = rect.width + 'px';
+          cloneThs[i].style.minWidth = rect.width + 'px';
+          cloneThs[i].style.maxWidth = rect.width + 'px';
+        }
       });
-      bar.style.paddingLeft = Math.max(0, tableRect.left) + 'px';
-      bar.style.paddingRight = Math.max(0, window.innerWidth - tableRect.right) + 'px';
+
+      bar.style.paddingLeft = '0px';
+      bar.style.paddingRight = '0px';
+
+      // Ensure the container for the fixed header itself is clipped to the visible table wrapper window
+      bar.style.left = Math.max(0, wrapperRect.left) + 'px';
+      bar.style.width = Math.min(window.innerWidth, wrapperRect.width) + 'px';
+      bar.style.right = 'auto'; // overriding any previous 'right' usage
+
+      // The cloned inner table needs to scale to its contents
+      innerTable.style.width = 'auto'; 
+      // Translate the inner table by negative scroll offset
+      innerTable.style.transform = `translateX(-${wrapper.scrollLeft}px)`;
+
       bar.classList.add('visible');
     }
 
     function hide() { bar.classList.remove('visible'); }
 
     function onScroll() {
+      let navHeight = 64;
+      if (window.innerWidth <= 800) {
+        const syncEl = document.querySelector('.sync-status');
+        if (syncEl) {
+          navHeight = syncEl.getBoundingClientRect().bottom;
+        }
+      } else {
+        const headerEl = document.querySelector('.app-header');
+        navHeight = headerEl ? headerEl.getBoundingClientRect().height : 64;
+      }
+
       // Show when the bottom edge of the real thead has gone above the navbar
-      if (thead.getBoundingClientRect().bottom <= NAVBAR_H) {
+      if (thead.getBoundingClientRect().bottom <= navHeight) {
+        bar.style.top = navHeight + 'px';
         syncAndShow();
       } else {
         hide();
@@ -395,6 +438,7 @@ const UI = (() => {
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
+    wrapper.addEventListener('scroll', onScroll, { passive: true });
 
     // Initial check (in case page loads already scrolled)
     onScroll();
@@ -402,6 +446,7 @@ const UI = (() => {
     return function cleanup() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
+      wrapper.removeEventListener('scroll', onScroll);
       bar.remove();
     };
   }

@@ -33,18 +33,53 @@
 
 /* TABLET VERTICAL / MOBILE LARGE (max-width: 800px) */
 @media (max-width: 800px) {
+    .app-header {
+        display: contents;
+    }
+
     .header-inner {
-        flex-wrap: wrap;
-        height: auto;
-        padding: 1rem 0;
-        justify-content: center;
+        display: contents;
+    }
+
+    .header-top {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        width: 100%;
+        box-sizing: border-box;
+        background: rgba(10, 14, 26, 0.85);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        transition: background 0.35s ease;
+        box-shadow: var(--shadow-sm);
+    }
+
+    [data-theme="light"] .header-top {
+        background: rgba(240, 244, 255, 0.88);
+    }
+
+    .logo {
+        gap: 0.5rem;
+    }
+
+    .sync-status {
+        margin: 0;
+        padding: 0.25rem 0.75rem;
     }
 
     .header-actions {
         width: 100%;
-        justify-content: center;
+        justify-content: flex-start;
         margin-top: 0.5rem;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 0.5rem 1.5rem 1rem;
+        -webkit-overflow-scrolling: touch;
     }
 
     .btn-header svg {
@@ -76,6 +111,35 @@
     .form-row {
         flex-direction: column;
         gap: 0.5rem;
+    }
+    .section.compare-section {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        padding-left: 0;
+        padding-right: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .compare-section .section-header,
+    .compare-section #bank-filter {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .compare-wrapper {
+        border-radius: 0;
+    }
+
+    .compare-table th:first-child,
+    .compare-table td:first-child {
+        padding-left: 1.5rem;
+    }
+
+    .compare-table th:last-child,
+    .compare-table td:last-child {
+        padding-right: 1.5rem;
     }
 }
 
@@ -135,11 +199,5 @@
         flex: 1;
         justify-content: center;
         text-align: center;
-    }
-
-    .sync-status {
-        width: 100%;
-        justify-content: center;
-        margin-top: 0.5rem;
     }
 }
