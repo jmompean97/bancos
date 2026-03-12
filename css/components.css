@@ -747,7 +747,7 @@
 }
 
 .compare-table {
-  width: auto;
+  width: 100%;
   min-width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;

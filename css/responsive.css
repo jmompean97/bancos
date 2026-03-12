@@ -112,6 +112,7 @@
         flex-direction: column;
         gap: 0.5rem;
     }
+
     .section.compare-section {
         width: 100vw;
         margin-left: calc(-50vw + 50%);
@@ -130,6 +131,10 @@
 
     .compare-wrapper {
         border-radius: 0;
+    }
+
+    .compare-table {
+        width: auto;
     }
 
     .compare-table th:first-child,
