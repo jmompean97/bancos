@@ -800,6 +800,8 @@ col.col-label {
   z-index: 90;
   pointer-events: none;
   background: var(--bg-sticky-header);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 2px solid rgba(59, 130, 246, 0.25);
   box-shadow: var(--shadow-toast);
   overflow: hidden;

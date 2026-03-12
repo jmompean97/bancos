@@ -373,44 +373,63 @@ const UI = (() => {
     // Build the fixed clone bar
     const bar = document.createElement('div');
     bar.className = 'sticky-col-header';
+    
+    // Container for horizontal clipping
+    const container = document.createElement('div');
+    container.style.cssText = 'position:relative; width:100%; height:100%; overflow:hidden;';
+    
     const innerTable = document.createElement('table');
-    innerTable.className = 'compare-table';
-    innerTable.style.tableLayout = 'fixed';
-    innerTable.style.width = '100%';
+    innerTable.className = 'compare-table sticky-clone';
+    // Match real table style exactly
+    innerTable.style.cssText = 'position:absolute; margin:0; table-layout:fixed; border-collapse:collapse; width:auto;';
+    
+    // Initial colgroup clone
+    const realColgroup = table.querySelector('colgroup');
+    const cloneColgroup = realColgroup ? realColgroup.cloneNode(true) : document.createElement('colgroup');
+    innerTable.appendChild(cloneColgroup);
     innerTable.appendChild(thead.cloneNode(true));
-    bar.appendChild(innerTable);
+    
+    container.appendChild(innerTable);
+    bar.appendChild(container);
     document.body.appendChild(bar);
 
     function syncAndShow() {
-      const realThs = thead.querySelectorAll('th');
-      const cloneThs = bar.querySelectorAll('th');
       const tableRect = table.getBoundingClientRect();
-      const wrapperRect = wrapper.getBoundingClientRect();
+      const realThs = thead.querySelectorAll('th');
+      const cloneThs = innerTable.querySelectorAll('th');
+      const cloneCols = cloneColgroup.querySelectorAll('col');
 
+      // 1. Force the outer table width to match the real one exactly
+      innerTable.style.width = tableRect.width + 'px';
+      innerTable.style.minWidth = tableRect.width + 'px';
+      
+      // 2. Sync every single column via colgroup (most reliable for table-layout: fixed)
       realThs.forEach((th, i) => {
+        const w = th.getBoundingClientRect().width;
+        // Apply to col if available, otherwise to TH
+        if (cloneCols[i]) {
+          cloneCols[i].style.width = w + 'px';
+        }
         if (cloneThs[i]) {
-          const rect = th.getBoundingClientRect();
-          // Ensure exact width syncing without being overridden by CSS limits
-          cloneThs[i].style.width = rect.width + 'px';
-          cloneThs[i].style.minWidth = rect.width + 'px';
-          cloneThs[i].style.maxWidth = rect.width + 'px';
+          cloneThs[i].style.width = w + 'px';
+          cloneThs[i].style.minWidth = w + 'px';
+          cloneThs[i].style.maxWidth = w + 'px';
+          // Fix for some browsers: ensure padding/borders match
+          cloneThs[i].style.boxSizing = 'border-box';
         }
       });
 
-      bar.style.paddingLeft = '0px';
-      bar.style.paddingRight = '0px';
+      // 3. Position and show
+      bar.style.left = '0';
+      bar.style.width = '100%';
+      bar.style.height = thead.getBoundingClientRect().height + 'px';
+      
+      // 4. Horizontal sync: Move the inner table to match real table absolute X
+      innerTable.style.left = tableRect.left + 'px';
 
-      // Ensure the container for the fixed header itself is clipped to the visible table wrapper window
-      bar.style.left = Math.max(0, wrapperRect.left) + 'px';
-      bar.style.width = Math.min(window.innerWidth, wrapperRect.width) + 'px';
-      bar.style.right = 'auto'; // overriding any previous 'right' usage
-
-      // The cloned inner table needs to scale to its contents
-      innerTable.style.width = 'auto';
-      // Translate the inner table by negative scroll offset
-      innerTable.style.transform = `translateX(-${wrapper.scrollLeft}px)`;
-
-      bar.classList.add('visible');
+      if (!bar.classList.contains('visible')) {
+        bar.classList.add('visible');
+      }
     }
 
     function hide() { bar.classList.remove('visible'); }
