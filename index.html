@@ -18,9 +18,29 @@
     <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/modals.css" />
     <link rel="stylesheet" href="css/responsive.css" />
+    <script>
+        // Critical: Apply theme and loader state before first paint
+        (function() {
+            const theme = localStorage.getItem('bancocomp-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            if (localStorage.getItem('bancocomp-gist-active') === 'true') {
+                document.documentElement.classList.add('is-sync-loading');
+            }
+        })();
+    </script>
 </head>
 
 <body>
+
+    <!-- ===== PRE-SYNC LOADING SCREEN ===== -->
+    <div id="pre-sync-loader" class="pre-sync-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <p>Sincronizando con Gist...</p>
+        </div>
+    </div>
+
 
     <!-- ===== HEADER ===== -->
     <header class="app-header">
@@ -516,7 +536,7 @@
 
     <!-- ===== SCRIPTS ===== -->
     <script>
-        // ThemeToggle: carga el tema antes del primer render (sin flash)
+        // ThemeToggle: UI updates (icons, etc)
         const ThemeToggle = (() => {
             const KEY = 'bancocomp-theme';
 
@@ -537,11 +557,6 @@
                 }
             }
 
-            function init() {
-                const saved = localStorage.getItem(KEY) || 'dark';
-                _apply(saved);
-            }
-
             function toggle() {
                 const current = document.documentElement.getAttribute('data-theme') || 'dark';
                 const next = current === 'dark' ? 'light' : 'dark';
@@ -549,10 +564,12 @@
                 _apply(next);
             }
 
-            // Aplicar inmediatamente (sin esperar al DOMContentLoaded)
-            init();
+            // Sync UI icon state with already applied theme from head
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            // Wait slightly for DOM if needed, but here it's bottom of body
+            _apply(currentTheme);
 
-            return { toggle, init };
+            return { toggle };
         })();
     </script>
     <script src="js/db.js"></script>

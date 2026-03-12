@@ -432,6 +432,7 @@ const App = (() => {
 
             // Guardar config en IndexedDB
             await DB.save('gist-config', { token: pat, gistId: Gist.getGistId() });
+            localStorage.setItem('bancocomp-gist-active', 'true');
             UI.setSyncStatus('synced');
             updateGistStatus();
 
@@ -449,6 +450,7 @@ const App = (() => {
         Gist.setToken(null);
         Gist.setGistId(null);
         await DB.remove('gist-config');
+        localStorage.removeItem('bancocomp-gist-active');
         sv('gist-pat', '');
         sv('gist-id', '');
         UI.setSyncStatus('offline');
@@ -465,11 +467,13 @@ const App = (() => {
         if (gistConfig?.token) {
             Gist.setToken(gistConfig.token);
             Gist.setGistId(gistConfig.gistId);
+            localStorage.setItem('bancocomp-gist-active', 'true');
         }
 
         // Cargar datos: Gist (nube) tiene prioridad sobre IndexedDB (local)
         let loaded = false;
         if (Gist.isConfigured()) {
+            UI.showPreSyncLoader();
             UI.setSyncStatus('syncing');
             try {
                 const remoteData = await Gist.read();
@@ -511,6 +515,9 @@ const App = (() => {
         // Restore UI
         UI.applyConditionsToUI(state.conditions);
         refresh();
+
+        // Hide loader after first refresh
+        UI.hidePreSyncLoader();
 
         if (state.banks.length > 0 || state.conditions) {
             UI.showToast('✓ Sesión restaurada', 'success');

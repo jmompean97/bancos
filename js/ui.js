@@ -66,6 +66,15 @@ const UI = (() => {
     el.innerHTML = `<span class="sync-icon">${s.icon}</span><span class="sync-text">${s.text}</span>`;
   }
 
+  // ─── Pre-sync Loader ────────────────────────
+  function showPreSyncLoader() {
+    document.documentElement.classList.add('is-sync-loading');
+  }
+
+  function hidePreSyncLoader() {
+    document.documentElement.classList.remove('is-sync-loading');
+  }
+
   // ─── Conditions summary ─────────────────────
   function applyConditionsToUI(conditions) {
     if (!conditions) return;
@@ -479,6 +488,8 @@ const UI = (() => {
     renderBanksGrid,
     renderCompareTable,
     renderBankFilter,
+    showPreSyncLoader,
+    hidePreSyncLoader,
     fmtEur, fmtPct,
     escapeHtml,
   };
