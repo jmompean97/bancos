@@ -429,7 +429,8 @@ const UI = (() => {
 
       // Show when the bottom edge of the real thead has gone above the navbar
       if (thead.getBoundingClientRect().bottom <= navHeight) {
-        bar.style.top = navHeight + 17 + 'px';
+        const offset = window.innerWidth <= 800 ? 16 : 0;
+        bar.style.top = (navHeight + offset) + 'px';
         syncAndShow();
       } else {
         hide();
