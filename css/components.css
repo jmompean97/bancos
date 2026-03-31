@@ -717,6 +717,83 @@
 }
 
 /* =============================================
+   BANCO IMPORTE CALCULADO (read-only display)
+   ============================================= */
+.banco-importe-calc {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0.6rem 0.9rem;
+  background: var(--glass);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  font-style: italic;
+  transition: var(--transition);
+}
+
+.banco-importe-calc.has-value {
+  color: var(--accent-blue-light);
+  font-style: normal;
+  font-weight: 600;
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* =============================================
+   GASTO ITEM — PAGADO TOGGLE
+   ============================================= */
+.gasto-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.gasto-pagado-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.gasto-pagado-label:hover {
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.gasto-pagado-check {
+  width: 13px;
+  height: 13px;
+  accent-color: #10b981;
+  cursor: pointer;
+}
+
+/* Cuando está marcado como pagado */
+.gasto-item.is-pagado .gasto-pagado-label {
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.10);
+}
+
+.gasto-item.is-pagado .form-input {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+/* =============================================
    GASTOS TOTAL PREVIEW
    ============================================= */
 .total-gastos-preview {

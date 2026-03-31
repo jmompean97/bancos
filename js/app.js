@@ -89,12 +89,11 @@ const App = (() => {
     async function saveConditions() {
         const importe = parseFloat(document.getElementById('importe').value);
         const inmueble = parseFloat(document.getElementById('valor-inmueble').value);
-        const plazo = parseInt(document.getElementById('plazo').value);
-        if (!importe || !plazo) {
-            UI.showToast('Introduce al menos el importe y el plazo', 'error');
+        if (!importe) {
+            UI.showToast('Introduce al menos el importe solicitado', 'error');
             return;
         }
-        state.conditions = { importe, inmueble, plazo };
+        state.conditions = { importe, inmueble };
         UI.applyConditionsToUI(state.conditions);
         UI.showToast('✓ Condiciones guardadas', 'success');
         await persistAndRefresh();
@@ -150,6 +149,7 @@ const App = (() => {
 
     function clearModalForm() {
         ['bank-name',
+            'banco-plazo', 'banco-financiacion',
             'fija-bon-interes', 'fija-bon-cuota', 'fija-bon-total',
             'fija-nobon-interes', 'fija-nobon-cuota', 'fija-nobon-total',
             'fija-nobon-amort-0-10', 'fija-nobon-amort-resto',
@@ -160,6 +160,17 @@ const App = (() => {
             'bon-spp-reduction', 'bon-spp-coste',
             'bon-fondos-reduction', 'bon-fondos-minimo', 'bon-notas'
         ].forEach(id => sv(id, ''));
+        // Reset calculated display
+        const disp = document.getElementById('banco-importe-display');
+        if (disp) disp.textContent = '—';
+        // Reset pagado checkboxes
+        const gastoKeys = ['tasacion', 'registro', 'notaria', 'gestoria', 'ajd', 'apertura', 'extras'];
+        gastoKeys.forEach(k => {
+            const cb = document.getElementById(`gasto-${k}-pagado`);
+            if (cb) cb.checked = false;
+            const item = cb?.closest('.gasto-item');
+            if (item) item.classList.remove('is-pagado');
+        });
         ['bon-nomina-check', 'bon-vida-check', 'bon-hogar-check', 'bon-tarjeta-check', 'bon-alarma-check', 'bon-spp-check', 'bon-fondos-check'].forEach(id => sc(id, false));
         ['bon-nomina-reduction', 'bon-vida-reduction', 'bon-hogar-reduction', 'bon-tarjeta-reduction', 'bon-alarma-reduction', 'bon-spp-reduction', 'bon-fondos-reduction'].forEach(id => {
             const el = document.getElementById(id);
@@ -170,6 +181,9 @@ const App = (() => {
 
     function loadBankIntoForm(b) {
         sv('bank-name', b.name);
+        sv('banco-plazo', b.bancoPlazo); sv('banco-financiacion', b.bancoFinanciacion);
+        // Recalculate display
+        calcBancoImporte();
         sv('fija-bon-interes', b.fijaBon?.interes); sv('fija-bon-cuota', b.fijaBon?.cuota); sv('fija-bon-total', b.fijaBon?.total);
         sv('fija-nobon-interes', b.fijaNobon?.interes); sv('fija-nobon-cuota', b.fijaNobon?.cuota); sv('fija-nobon-total', b.fijaNobon?.total);
         sv('fija-nobon-amort-0-10', b.fijaNobon?.amort010); sv('fija-nobon-amort-resto', b.fijaNobon?.amortResto);
@@ -177,6 +191,15 @@ const App = (() => {
         sv('gasto-notaria', b.gastos?.notaria); sv('gasto-gestoria', b.gastos?.gestoria);
         sv('gasto-ajd', b.gastos?.ajd); sv('gasto-apertura', b.gastos?.apertura); sv('gasto-extras', b.gastos?.extras);
         sv('gasto-notas', b.gastos?.notas);
+        // Restore pagado states
+        const gastoKeys = ['tasacion', 'registro', 'notaria', 'gestoria', 'ajd', 'apertura', 'extras'];
+        gastoKeys.forEach(k => {
+            const pagado = b.gastos?.[k + 'Pagado'] || false;
+            const cb = document.getElementById(`gasto-${k}-pagado`);
+            if (cb) cb.checked = pagado;
+            const item = cb?.closest('.gasto-item');
+            if (item) item.classList.toggle('is-pagado', pagado);
+        });
         sc('bon-nomina-check', b.bonificaciones?.nominaActiva); sv('bon-nomina-reduction', b.bonificaciones?.nominaReduction);
         sc('bon-vida-check', b.bonificaciones?.vidaActiva); sv('bon-vida-reduction', b.bonificaciones?.vidaReduction);
         sc('bon-hogar-check', b.bonificaciones?.hogarActiva); sv('bon-hogar-reduction', b.bonificaciones?.hogarReduction);
@@ -202,14 +225,21 @@ const App = (() => {
     function collectBankData() {
         return {
             name: gv('bank-name'),
+            bancoPlazo: gv('banco-plazo'),
+            bancoFinanciacion: gv('banco-financiacion'),
             fijaBon: { interes: gv('fija-bon-interes'), cuota: gv('fija-bon-cuota'), total: gv('fija-bon-total') },
             fijaNobon: {
                 interes: gv('fija-nobon-interes'), cuota: gv('fija-nobon-cuota'), total: gv('fija-nobon-total'),
                 amort010: gv('fija-nobon-amort-0-10'), amortResto: gv('fija-nobon-amort-resto')
             },
             gastos: {
-                tasacion: gv('gasto-tasacion'), registro: gv('gasto-registro'), notaria: gv('gasto-notaria'),
-                gestoria: gv('gasto-gestoria'), ajd: gv('gasto-ajd'), apertura: gv('gasto-apertura'), extras: gv('gasto-extras'),
+                tasacion: gv('gasto-tasacion'), tasacionPagado: document.getElementById('gasto-tasacion-pagado')?.checked || false,
+                registro: gv('gasto-registro'),   registroPagado: document.getElementById('gasto-registro-pagado')?.checked || false,
+                notaria: gv('gasto-notaria'),     notariaPagado: document.getElementById('gasto-notaria-pagado')?.checked || false,
+                gestoria: gv('gasto-gestoria'),   gestoriaPagado: document.getElementById('gasto-gestoria-pagado')?.checked || false,
+                ajd: gv('gasto-ajd'),             ajdPagado: document.getElementById('gasto-ajd-pagado')?.checked || false,
+                apertura: gv('gasto-apertura'),   aperturaPagado: document.getElementById('gasto-apertura-pagado')?.checked || false,
+                extras: gv('gasto-extras'),       extrasPagado: document.getElementById('gasto-extras-pagado')?.checked || false,
                 notas: gv('gasto-notas')
             },
             bonificaciones: {
@@ -243,6 +273,30 @@ const App = (() => {
         const check = document.getElementById(prefix + '-check');
         const input = document.getElementById(prefix + '-reduction');
         if (check && input) input.disabled = !check.checked;
+    }
+
+    // ─── Gasto pagado toggle ─────────────────────
+    function toggleGastoPagado(key) {
+        const cb = document.getElementById(`gasto-${key}-pagado`);
+        const item = cb?.closest('.gasto-item');
+        if (item) item.classList.toggle('is-pagado', cb.checked);
+        UI.updateGastosTotal();
+    }
+
+    // ─── Calc importe banco ─────────────────────
+    function calcBancoImporte() {
+        const pct = parseFloat(document.getElementById('banco-financiacion')?.value);
+        const inmueble = state.conditions?.inmueble;
+        const disp = document.getElementById('banco-importe-display');
+        if (!disp) return;
+        if (pct > 0 && inmueble > 0) {
+            const calc = (pct / 100) * inmueble;
+            disp.textContent = calc.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+            disp.classList.add('has-value');
+        } else {
+            disp.textContent = '—';
+            disp.classList.remove('has-value');
+        }
     }
 
     // ─── CRUD bancos ────────────────────────────
@@ -347,7 +401,7 @@ const App = (() => {
         if (!confirm('¿Borrar todos los datos y empezar de cero?')) return;
         state.conditions = null;
         state.banks = [];
-        ['importe', 'valor-inmueble', 'plazo'].forEach(id => sv(id, ''));
+        ['importe', 'valor-inmueble'].forEach(id => sv(id, ''));
         document.getElementById('conditions-summary').style.display = 'none';
         await DB.remove('session');
         refresh();
@@ -528,7 +582,7 @@ const App = (() => {
     return {
         saveConditions,
         openAddBankModal, openEditBankModal, closeBankModal, closeModalOnOverlay,
-        switchTab, toggleBonif,
+        switchTab, toggleBonif, toggleGastoPagado, calcBancoImporte,
         saveBank, deleteBank, reorderBanks,
         toggleBankVisibility,
         exportJSON, importJSON, resetAll,

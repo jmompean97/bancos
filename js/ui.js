@@ -78,28 +78,28 @@ const UI = (() => {
   // ─── Conditions summary ─────────────────────
   function applyConditionsToUI(conditions) {
     if (!conditions) return;
-    const { importe, inmueble, plazo } = conditions;
-    const pct = inmueble ? ((importe / inmueble) * 100).toFixed(1) + ' %' : '—';
+    const { importe, inmueble } = conditions;
+    const pct = (importe && inmueble) ? ((importe / inmueble) * 100).toFixed(1) + ' %' : '—';
     const $ = (id) => document.getElementById(id);
     $('sum-importe').textContent = fmtEur(importe) || '—';
     $('sum-inmueble').textContent = fmtEur(inmueble) || '—';
     $('sum-financiacion').textContent = pct;
-    $('sum-plazo').textContent = plazo ? plazo + ' años' : '—';
 
     $('conditions-summary').style.display = 'flex';
     $('importe').value = importe || '';
     $('valor-inmueble').value = inmueble || '';
-    $('plazo').value = plazo || '';
-
-    document.querySelectorAll('[id^="plazo-label-"]').forEach(el => {
-      el.textContent = plazo;
-    });
   }
 
   // ─── Gastos total live ──────────────────────
   function updateGastosTotal() {
-    const ids = ['gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura', 'gasto-extras'];
-    const total = ids.reduce((s, id) => s + (parseFloat(document.getElementById(id)?.value) || 0), 0);
+    const keys = ['tasacion', 'registro', 'notaria', 'gestoria', 'ajd', 'apertura', 'extras'];
+    let total = 0;
+    keys.forEach(k => {
+      const pagado = document.getElementById(`gasto-${k}-pagado`)?.checked;
+      if (!pagado) {
+        total += parseFloat(document.getElementById(`gasto-${k}`)?.value) || 0;
+      }
+    });
     const el = document.getElementById('total-gastos-val');
     if (el) el.textContent = total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
   }
@@ -279,8 +279,12 @@ const UI = (() => {
     }
     function totalGastos(b) {
       const g = b.gastos; if (!g) return null;
-      const t = [g.tasacion, g.registro, g.notaria, g.gestoria, g.ajd, g.apertura, g.extras]
-        .reduce((s, v) => s + (parseFloat(v) || 0), 0);
+      // Solo suma los gastos NO marcados como pagados
+      const fields = [
+        ['tasacion', 'tasacionPagado'], ['registro', 'registroPagado'], ['notaria', 'notariaPagado'],
+        ['gestoria', 'gestoriaPagado'], ['ajd', 'ajdPagado'], ['apertura', 'aperturaPagado'], ['extras', 'extrasPagado']
+      ];
+      const t = fields.reduce((s, [k, kp]) => s + (g[kp] ? 0 : (parseFloat(g[k]) || 0)), 0);
       return t > 0 ? t : null;
     }
     const headers = banks.map(b =>
@@ -302,12 +306,21 @@ const UI = (() => {
         ${colgroup}
         <thead><tr><th>Campo</th>${headers}</tr></thead>
         <tbody>
-          ${sectionRow(`🏠 Hipoteca Fija — ${plazo} años — BONIFICADA`, 'green')}
+          ${sectionRow('🏦 Condiciones del banco', 'blue')}
+          ${row('Plazo hipoteca (años)', b => b.bancoPlazo, v => v + ' años', null, null)}
+          ${row('% Financiado', b => b.bancoFinanciacion, v => v + ' %', null, null)}
+          ${row('Importe financiado', b => {
+            const pct = parseFloat(b.bancoFinanciacion);
+            const inm = parseFloat(conditions?.inmueble);
+            return (pct > 0 && inm > 0) ? ((pct / 100) * inm) : null;
+          }, fmtEur, null, null)}
+
+          ${sectionRow('🏠 Hipoteca Fija — BONIFICADA', 'green')}
           ${row('% Interés', b => b.fijaBon?.interes, fmtPct, bestMin, worstMax)}
           ${row('Cuota mensual', b => b.fijaBon?.cuota, fmtEur, bestMin, worstMax)}
           ${row('Total a pagar', b => b.fijaBon?.total, fmtEur, bestMin, worstMax)}
 
-          ${sectionRow(`🏠 Hipoteca Fija — ${plazo} años — NO BONIFICADA`, 'orange')}
+          ${sectionRow('🏠 Hipoteca Fija — NO BONIFICADA', 'orange')}
           ${row('% Interés', b => b.fijaNobon?.interes, fmtPct, bestMin, worstMax)}
           ${row('Cuota mensual', b => b.fijaNobon?.cuota, fmtEur, bestMin, worstMax)}
           ${row('Total a pagar', b => b.fijaNobon?.total, fmtEur, bestMin, worstMax)}
@@ -315,13 +328,13 @@ const UI = (() => {
           ${row('Amortización resto', b => b.fijaNobon?.amortResto, fmtPct, bestMin, worstMax)}
 
           ${sectionRow('💸 Otros Gastos', '')}
-          ${row('Tasación', b => b.gastos?.tasacion, fmtEur, bestMin, worstMax)}
-          ${row('Registro propiedad', b => b.gastos?.registro, fmtEur, bestMin, worstMax)}
-          ${row('Notaría', b => b.gastos?.notaria, fmtEur, bestMin, worstMax)}
-          ${row('Gestoría', b => b.gastos?.gestoria, fmtEur, bestMin, worstMax)}
-          ${row('Impuesto AJD', b => b.gastos?.ajd, fmtEur, bestMin, worstMax)}
-          ${row('Comisión de apertura', b => b.gastos?.apertura, fmtEur, bestMin, worstMax)}
-          ${row('Otros extras', b => b.gastos?.extras, fmtEur, bestMin, worstMax)}
+          ${row('Tasación', b => b.gastos?.tasacionPagado ? null : b.gastos?.tasacion, v => fmtEur(v), bestMin, worstMax)}
+          ${row('Registro propiedad', b => b.gastos?.registroPagado ? null : b.gastos?.registro, v => fmtEur(v), bestMin, worstMax)}
+          ${row('Notaría', b => b.gastos?.notariaPagado ? null : b.gastos?.notaria, v => fmtEur(v), bestMin, worstMax)}
+          ${row('Gestoría', b => b.gastos?.gestoriaPagado ? null : b.gastos?.gestoria, v => fmtEur(v), bestMin, worstMax)}
+          ${row('Impuesto AJD', b => b.gastos?.ajdPagado ? null : b.gastos?.ajd, v => fmtEur(v), bestMin, worstMax)}
+          ${row('Comisión de apertura', b => b.gastos?.aperturaPagado ? null : b.gastos?.apertura, v => fmtEur(v), bestMin, worstMax)}
+          ${row('Otros extras', b => b.gastos?.extrasPagado ? null : b.gastos?.extras, v => fmtEur(v), bestMin, worstMax)}
           ${row('TOTAL otros gastos', totalGastos, fmtEur, bestMin, worstMax)}
           ${row('Anotaciones', b => b.gastos?.notas || null, v => `<span class="table-notes">${escapeHtml(v)}</span>`, null, null)}
 

@@ -20,10 +20,10 @@
     <link rel="stylesheet" href="css/responsive.css" />
     <script>
         // Critical: Apply theme and loader state before first paint
-        (function() {
+        (function () {
             const theme = localStorage.getItem('bancocomp-theme') || 'dark';
             document.documentElement.setAttribute('data-theme', theme);
-            
+
             if (localStorage.getItem('bancocomp-gist-active') === 'true') {
                 document.documentElement.classList.add('is-sync-loading');
             }
@@ -140,20 +140,14 @@
                     <input class="form-input" type="number" id="valor-inmueble" placeholder="250.000" min="0"
                         step="1000" />
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="plazo">Plazo (años)</label>
-                    <input class="form-input" type="number" id="plazo" placeholder="20" min="1" max="40" />
-                </div>
             </div>
             <div class="conditions-summary" id="conditions-summary" style="display:none;">
                 <div class="summary-item"><span class="summary-label">Importe</span><span class="summary-value"
                         id="sum-importe">—</span></div>
                 <div class="summary-item"><span class="summary-label">Valor inmueble</span><span class="summary-value"
                         id="sum-inmueble">—</span></div>
-                <div class="summary-item"><span class="summary-label">% Financiación</span><span class="summary-value"
-                        id="sum-financiacion">—</span></div>
-                <div class="summary-item"><span class="summary-label">Plazo</span><span class="summary-value"
-                        id="sum-plazo">—</span></div>
+                <div class="summary-item"><span class="summary-label">% Financiación (calculado)</span><span
+                        class="summary-value" id="sum-financiacion">—</span></div>
             </div>
             <button class="btn btn-primary" id="btn-conditions" onclick="App.saveConditions()">
                 <svg viewBox="0 0 24 24" fill="none">
@@ -261,8 +255,29 @@
 
                 <!-- TAB: Hipoteca Fija -->
                 <div class="tab-panel active" id="panel-fija">
+                    <!-- Condiciones específicas del banco -->
+                    <div class="panel-subheader" style="margin-bottom:0.5rem;">
+                        <svg viewBox="0 0 24 24" fill="none" class="panel-icon">
+                            <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span class="panel-subheader-label">Condiciones de este banco</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">Plazo hipoteca (años)</label><input
+                                class="form-input" type="number" id="banco-plazo" placeholder="20" min="1" max="40" />
+                        </div>
+                        <div class="form-group"><label class="form-label">% Financiado por el banco</label><input
+                                class="form-input" type="number" step="0.1" id="banco-financiacion" placeholder="80"
+                                min="0" max="100" oninput="App.calcBancoImporte()" /></div>
+                        <div class="form-group">
+                            <label class="form-label">I. financiado (calculado)</label>
+                            <div class="banco-importe-calc" id="banco-importe-display">—</div>
+                        </div>
+                    </div>
+
                     <div class="panel-subheader"><span class="badge badge-green">Bonificada</span><span
-                            class="panel-subheader-label">Hipoteca Fija — <span id="plazo-label-1">20</span> años</span>
+                            class="panel-subheader-label">Hipoteca Fija</span>
                     </div>
                     <div class="form-row">
                         <div class="form-group"><label class="form-label">% Interés</label><input class="form-input"
@@ -275,7 +290,7 @@
                                 placeholder="216.000" /></div>
                     </div>
                     <div class="panel-subheader"><span class="badge badge-orange">No bonificada</span><span
-                            class="panel-subheader-label">Hipoteca Fija — <span id="plazo-label-2">20</span> años</span>
+                            class="panel-subheader-label">Hipoteca Fija</span>
                     </div>
                     <div class="form-row">
                         <div class="form-group"><label class="form-label">% Interés</label><input class="form-input"
@@ -306,28 +321,75 @@
                                 stroke-linecap="round" stroke-linejoin="round" />
                         </svg><span class="panel-subheader-label">Otros gastos asociados</span></div>
                     <div class="form-row">
-                        <div class="form-group"><label class="form-label">Tasación (€)</label><input class="form-input"
-                                type="number" step="0.01" id="gasto-tasacion" placeholder="400" /></div>
-                        <div class="form-group"><label class="form-label">Registro propiedad (€)</label><input
-                                class="form-input" type="number" step="0.01" id="gasto-registro" placeholder="600" />
+                        <div class="form-group gasto-item">
+                            <div class="gasto-label-row">
+                                <label class="form-label">Tasación (€)</label>
+                                <label class="gasto-pagado-label"><input type="checkbox" id="gasto-tasacion-pagado"
+                                        class="gasto-pagado-check" onchange="App.toggleGastoPagado('tasacion')" />
+                                    Pagado</label>
+                            </div>
+                            <input class="form-input" type="number" step="0.01" id="gasto-tasacion" placeholder="400" />
+                        </div>
+                        <div class="form-group gasto-item">
+                            <div class="gasto-label-row">
+                                <label class="form-label">Registro propiedad (€)</label>
+                                <label class="gasto-pagado-label"><input type="checkbox" id="gasto-registro-pagado"
+                                        class="gasto-pagado-check" onchange="App.toggleGastoPagado('registro')" />
+                                    Pagado</label>
+                            </div>
+                            <input class="form-input" type="number" step="0.01" id="gasto-registro" placeholder="600" />
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label class="form-label">Notaría (€)</label><input class="form-input"
-                                type="number" step="0.01" id="gasto-notaria" placeholder="1.000" /></div>
-                        <div class="form-group"><label class="form-label">Gestoría (€)</label><input class="form-input"
-                                type="number" step="0.01" id="gasto-gestoria" placeholder="300" /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Impuesto AJD (€)</label><input
-                                class="form-input" type="number" step="0.01" id="gasto-ajd" placeholder="0" /></div>
-                        <div class="form-group"><label class="form-label">Comisión de apertura (€)</label><input
-                                class="form-input" type="number" step="0.01" id="gasto-apertura" placeholder="0" />
+                        <div class="form-group gasto-item">
+                            <div class="gasto-label-row">
+                                <label class="form-label">Notaría (€)</label>
+                                <label class="gasto-pagado-label"><input type="checkbox" id="gasto-notaria-pagado"
+                                        class="gasto-pagado-check" onchange="App.toggleGastoPagado('notaria')" />
+                                    Pagado</label>
+                            </div>
+                            <input class="form-input" type="number" step="0.01" id="gasto-notaria"
+                                placeholder="1.000" />
+                        </div>
+                        <div class="form-group gasto-item">
+                            <div class="gasto-label-row">
+                                <label class="form-label">Gestoría (€)</label>
+                                <label class="gasto-pagado-label"><input type="checkbox" id="gasto-gestoria-pagado"
+                                        class="gasto-pagado-check" onchange="App.toggleGastoPagado('gestoria')" />
+                                    Pagado</label>
+                            </div>
+                            <input class="form-input" type="number" step="0.01" id="gasto-gestoria" placeholder="300" />
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group" style="flex:1;"><label class="form-label">Otros extras (€)</label><input
-                                class="form-input" type="number" step="0.01" id="gasto-extras" placeholder="0" />
+                        <div class="form-group gasto-item">
+                            <div class="gasto-label-row">
+                                <label class="form-label">Impuesto AJD (€)</label>
+                                <label class="gasto-pagado-label"><input type="checkbox" id="gasto-ajd-pagado"
+                                        class="gasto-pagado-check" onchange="App.toggleGastoPagado('ajd')" />
+                                    Pagado</label>
+                            </div>
+                            <input class="form-input" type="number" step="0.01" id="gasto-ajd" placeholder="0" />
+                        </div>
+                        <div class="form-group gasto-item">
+                            <div class="gasto-label-row">
+                                <label class="form-label">Comisión de apertura (€)</label>
+                                <label class="gasto-pagado-label"><input type="checkbox" id="gasto-apertura-pagado"
+                                        class="gasto-pagado-check" onchange="App.toggleGastoPagado('apertura')" />
+                                    Pagado</label>
+                            </div>
+                            <input class="form-input" type="number" step="0.01" id="gasto-apertura" placeholder="0" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group gasto-item" style="flex:1;">
+                            <div class="gasto-label-row">
+                                <label class="form-label">Otros extras (€)</label>
+                                <label class="gasto-pagado-label"><input type="checkbox" id="gasto-extras-pagado"
+                                        class="gasto-pagado-check" onchange="App.toggleGastoPagado('extras')" />
+                                    Pagado</label>
+                            </div>
+                            <input class="form-input" type="number" step="0.01" id="gasto-extras" placeholder="0" />
                         </div>
                     </div>
                     <div class="form-row">
