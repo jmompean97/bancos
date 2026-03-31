@@ -248,23 +248,27 @@ const UI = (() => {
     function bestMin(getter) {
       const vals = banks.map(b => parseFloat(getter(b)));
       const valid = vals.filter(v => !isNaN(v));
-      if (valid.length < 2) return -1;
-      return vals.findIndex(v => v === Math.min(...valid));
+      if (valid.length < 2) return new Set();
+      const min = Math.min(...valid);
+      return new Set(vals.reduce((acc, v, i) => { if (v === min) acc.push(i); return acc; }, []));
     }
     function worstMax(getter) {
       const vals = banks.map(b => parseFloat(getter(b)));
       const valid = vals.filter(v => !isNaN(v));
-      if (valid.length < 2) return -1;
-      return vals.findIndex(v => v === Math.max(...valid));
+      if (valid.length < 2) return new Set();
+      const max = Math.max(...valid);
+      return new Set(vals.reduce((acc, v, i) => { if (v === max) acc.push(i); return acc; }, []));
     }
     function row(label, getter, fmtFn, bestFn, worstFn) {
+      const bestSet  = bestFn  ? bestFn(getter)  : new Set();
+      const worstSet = worstFn ? worstFn(getter) : new Set();
       const cells = banks.map((b, i) => {
         const raw = getter(b);
         const val = raw !== null && raw !== undefined && raw !== '' ? raw : null;
         let cls = '';
         if (val !== null) {
-          if (bestFn && bestFn(getter) === i) cls = 'best';
-          else if (worstFn && worstFn(getter) === i) cls = 'worst';
+          if (bestSet.has(i))  cls = 'best';
+          else if (worstSet.has(i)) cls = 'worst';
         }
         return `<td class="${cls}">${val !== null ? (fmtFn ? fmtFn(val) : val) : '<span class="no-val">—</span>'}</td>`;
       }).join('');
