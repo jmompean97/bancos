@@ -66,6 +66,7 @@ cd bancos
 - **Hipoteca Fija** — Bonificada y No Bonificada
   - % Interés, cuota mensual, total a pagar
   - Comisiones de amortización anticipada (tramos 0-10 años y resto)
+  - **Condiciones dinámicas por banco**: personaliza el plazo hipotecario y el % de financiación. El importe financiado se calcula automáticamente sobre el valor de compraventa/tasación del inmueble.
 
 
 
@@ -78,8 +79,11 @@ cd bancos
 | Notaría | Honorarios notariales |
 | Gestoría | Gestión administrativa |
 | Impuesto AJD | Actos Jurídicos Documentados |
+| Comisión de apertura | Importe o porcentaje cobrado al inicio |
+| Otros extras | Gastos adicionales personalizados |
 
-> El total de otros gastos se calcula automáticamente en tiempo real.
+> 🧮 El total de otros gastos se calcula automáticamente en tiempo real.
+> ✅ **Gastos "Pagados"**: puedes marcar cualquier gasto como ya pagado mediante un checkbox para excluirlo  automáticamente del total a pagar pendiente.
 
 ### ⭐ Bonificaciones
 
