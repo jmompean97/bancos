@@ -104,8 +104,19 @@ const UI = (() => {
     if (el) el.textContent = total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
   }
 
+  // ─── Gastos total banco (excluding pagados) ─
+  function calcTotalGastos(b) {
+    const g = b.gastos; if (!g) return null;
+    const fields = [
+      ['tasacion', 'tasacionPagado'], ['registro', 'registroPagado'], ['notaria', 'notariaPagado'],
+      ['gestoria', 'gestoriaPagado'], ['ajd', 'ajdPagado'], ['apertura', 'aperturaPagado'], ['extras', 'extrasPagado']
+    ];
+    const t = fields.reduce((s, [k, kp]) => s + (g[kp] ? 0 : (parseFloat(g[k]) || 0)), 0);
+    return t > 0 ? t : null;
+  }
+
   // ─── Banks Grid ─────────────────────────────
-  function renderBanksGrid(banks, onEdit, onDelete) {
+  function renderBanksGrid(banks, conditions, onEdit, onDelete) {
     const grid = document.getElementById('banks-grid');
     const empty = document.getElementById('empty-state');
 
@@ -118,13 +129,11 @@ const UI = (() => {
     grid.innerHTML = banks.map((b, i) => {
       const initials = b.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
       const interesFijaBon = b.fijaBon?.interes ? fmtPct(b.fijaBon.interes) : null;
-      const cuotaFijaBon = b.fijaBon?.cuota ? fmtEur(b.fijaBon.cuota) : null;
-      const totalFijaBon = b.fijaBon?.total ? fmtEur(b.fijaBon.total) : null;
-      const gastos = b.gastos;
-      const totalGastos = gastos
-        ? [gastos.tasacion, gastos.registro, gastos.notaria, gastos.gestoria, gastos.ajd, gastos.apertura, gastos.extras]
-          .reduce((s, v) => s + (parseFloat(v) || 0), 0)
-        : 0;
+      
+      const calcResult = App.calculateMortgage(b.fijaBon?.interes, b.bancoPlazo, b.bancoFinanciacion, conditions?.inmueble);
+      const cuotaFijaBon = calcResult.cuota ? fmtEur(calcResult.cuota) : null;
+      const totalFijaBon = calcResult.total ? fmtEur(calcResult.total) : null;
+      const totalGastos = calcTotalGastos(b) || 0;
       const bonActivas = [];
       if (b.bonificaciones?.nominaActiva) bonActivas.push('Nómina');
       if (b.bonificaciones?.vidaActiva) bonActivas.push('Seg. Vida');
@@ -277,16 +286,6 @@ const UI = (() => {
     function sectionRow(label, cls = '') {
       return `<tr class="section-row ${cls}"><td colspan="${banks.length + 1}">${label}</td></tr>`;
     }
-    function totalGastos(b) {
-      const g = b.gastos; if (!g) return null;
-      // Solo suma los gastos NO marcados como pagados
-      const fields = [
-        ['tasacion', 'tasacionPagado'], ['registro', 'registroPagado'], ['notaria', 'notariaPagado'],
-        ['gestoria', 'gestoriaPagado'], ['ajd', 'ajdPagado'], ['apertura', 'aperturaPagado'], ['extras', 'extrasPagado']
-      ];
-      const t = fields.reduce((s, [k, kp]) => s + (g[kp] ? 0 : (parseFloat(g[k]) || 0)), 0);
-      return t > 0 ? t : null;
-    }
     const headers = banks.map(b =>
       `<th data-color="${b.color}">
         <div style="display:flex;align-items:center;gap:0.5rem;">
@@ -316,14 +315,14 @@ const UI = (() => {
           }, fmtEur, null, null)}
 
           ${sectionRow('🏠 Hipoteca Fija — BONIFICADA', 'green')}
-          ${row('% Interés', b => b.fijaBon?.interes, fmtPct, bestMin, worstMax)}
-          ${row('Cuota mensual', b => b.fijaBon?.cuota, fmtEur, bestMin, worstMax)}
-          ${row('Total a pagar', b => b.fijaBon?.total, fmtEur, bestMin, worstMax)}
+          ${row('% Interés TIN', b => b.fijaBon?.interes, fmtPct, bestMin, worstMax)}
+          ${row('Cuota mensual', b => App.calculateMortgage(b.fijaBon?.interes, b.bancoPlazo, b.bancoFinanciacion, conditions?.inmueble).cuota, fmtEur, bestMin, worstMax)}
+          ${row('Total a pagar', b => App.calculateMortgage(b.fijaBon?.interes, b.bancoPlazo, b.bancoFinanciacion, conditions?.inmueble).total, fmtEur, bestMin, worstMax)}
 
           ${sectionRow('🏠 Hipoteca Fija — NO BONIFICADA', 'orange')}
-          ${row('% Interés', b => b.fijaNobon?.interes, fmtPct, bestMin, worstMax)}
-          ${row('Cuota mensual', b => b.fijaNobon?.cuota, fmtEur, bestMin, worstMax)}
-          ${row('Total a pagar', b => b.fijaNobon?.total, fmtEur, bestMin, worstMax)}
+          ${row('% Interés TIN', b => b.fijaNobon?.interes, fmtPct, bestMin, worstMax)}
+          ${row('Cuota mensual', b => App.calculateMortgage(b.fijaNobon?.interes, b.bancoPlazo, b.bancoFinanciacion, conditions?.inmueble).cuota, fmtEur, bestMin, worstMax)}
+          ${row('Total a pagar', b => App.calculateMortgage(b.fijaNobon?.interes, b.bancoPlazo, b.bancoFinanciacion, conditions?.inmueble).total, fmtEur, bestMin, worstMax)}
           ${row('Amortización 0-10 años', b => b.fijaNobon?.amort010, fmtPct, bestMin, worstMax)}
           ${row('Amortización resto', b => b.fijaNobon?.amortResto, fmtPct, bestMin, worstMax)}
 
@@ -335,7 +334,7 @@ const UI = (() => {
           ${row('Impuesto AJD', b => b.gastos?.ajdPagado ? null : b.gastos?.ajd, v => fmtEur(v), bestMin, worstMax)}
           ${row('Comisión de apertura', b => b.gastos?.aperturaPagado ? null : b.gastos?.apertura, v => fmtEur(v), bestMin, worstMax)}
           ${row('Otros extras', b => b.gastos?.extrasPagado ? null : b.gastos?.extras, v => fmtEur(v), bestMin, worstMax)}
-          ${row('TOTAL otros gastos', totalGastos, fmtEur, bestMin, worstMax)}
+          ${row('TOTAL otros gastos', calcTotalGastos, fmtEur, bestMin, worstMax)}
           ${row('Anotaciones', b => b.gastos?.notas || null, v => `<span class="table-notes">${escapeHtml(v)}</span>`, null, null)}
 
           ${sectionRow('⭐ Bonificaciones', 'purple')}

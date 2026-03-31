@@ -74,7 +74,7 @@ const App = (() => {
     }
 
     function refresh() {
-        UI.renderBanksGrid(state.banks);
+        UI.renderBanksGrid(state.banks, state.conditions);
         const visibleBanks = state.banks.filter((_, i) => !state.hiddenBanks.has(i));
         UI.renderBankFilter(state.banks, state.hiddenBanks);
         UI.renderCompareTable(visibleBanks, state.conditions);
@@ -150,8 +150,7 @@ const App = (() => {
     function clearModalForm() {
         ['bank-name',
             'banco-plazo', 'banco-financiacion',
-            'fija-bon-interes', 'fija-bon-cuota', 'fija-bon-total',
-            'fija-nobon-interes', 'fija-nobon-cuota', 'fija-nobon-total',
+            'fija-bon-interes', 'fija-nobon-interes',
             'fija-nobon-amort-0-10', 'fija-nobon-amort-resto',
             'gasto-tasacion', 'gasto-registro', 'gasto-notaria', 'gasto-gestoria', 'gasto-ajd', 'gasto-apertura', 'gasto-extras', 'gasto-notas',
             'bon-nomina-reduction', 'bon-vida-reduction', 'bon-hogar-reduction', 'bon-tarjeta-reduction',
@@ -160,9 +159,13 @@ const App = (() => {
             'bon-spp-reduction', 'bon-spp-coste',
             'bon-fondos-reduction', 'bon-fondos-minimo', 'bon-notas'
         ].forEach(id => sv(id, ''));
-        // Reset calculated display
+        // Reset calculated displays
         const disp = document.getElementById('banco-importe-display');
-        if (disp) disp.textContent = '—';
+        if (disp) { disp.textContent = '—'; disp.classList.remove('has-value'); }
+        ['fija-bon-cuota-display', 'fija-bon-total-display', 'fija-nobon-cuota-display', 'fija-nobon-total-display'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.textContent = '—'; el.classList.remove('has-value'); }
+        });
         // Reset pagado checkboxes
         const gastoKeys = ['tasacion', 'registro', 'notaria', 'gestoria', 'ajd', 'apertura', 'extras'];
         gastoKeys.forEach(k => {
@@ -182,10 +185,11 @@ const App = (() => {
     function loadBankIntoForm(b) {
         sv('bank-name', b.name);
         sv('banco-plazo', b.bancoPlazo); sv('banco-financiacion', b.bancoFinanciacion);
-        // Recalculate display
-        calcBancoImporte();
-        sv('fija-bon-interes', b.fijaBon?.interes); sv('fija-bon-cuota', b.fijaBon?.cuota); sv('fija-bon-total', b.fijaBon?.total);
-        sv('fija-nobon-interes', b.fijaNobon?.interes); sv('fija-nobon-cuota', b.fijaNobon?.cuota); sv('fija-nobon-total', b.fijaNobon?.total);
+        sv('fija-bon-interes', b.fijaBon?.interes);
+        sv('fija-nobon-interes', b.fijaNobon?.interes);
+        // Recalculate displays (importe, cuota, total)
+        recalcBankForm();
+        
         sv('fija-nobon-amort-0-10', b.fijaNobon?.amort010); sv('fija-nobon-amort-resto', b.fijaNobon?.amortResto);
         sv('gasto-tasacion', b.gastos?.tasacion); sv('gasto-registro', b.gastos?.registro);
         sv('gasto-notaria', b.gastos?.notaria); sv('gasto-gestoria', b.gastos?.gestoria);
@@ -227,9 +231,9 @@ const App = (() => {
             name: gv('bank-name'),
             bancoPlazo: gv('banco-plazo'),
             bancoFinanciacion: gv('banco-financiacion'),
-            fijaBon: { interes: gv('fija-bon-interes'), cuota: gv('fija-bon-cuota'), total: gv('fija-bon-total') },
+            fijaBon: { interes: gv('fija-bon-interes') },
             fijaNobon: {
-                interes: gv('fija-nobon-interes'), cuota: gv('fija-nobon-cuota'), total: gv('fija-nobon-total'),
+                interes: gv('fija-nobon-interes'),
                 amort010: gv('fija-nobon-amort-0-10'), amortResto: gv('fija-nobon-amort-resto')
             },
             gastos: {
@@ -283,20 +287,85 @@ const App = (() => {
         UI.updateGastosTotal();
     }
 
-    // ─── Calc importe banco ─────────────────────
-    function calcBancoImporte() {
+    // ─── Calc importe banco & formula francesa (BdE simulator) ──
+    function calculateMortgage(interesAno, plazoAnos, financiacionPct, inmueble) {
+        if (!interesAno || !plazoAnos || !financiacionPct || !inmueble) return { cuota: null, total: null };
+        const V = (parseFloat(financiacionPct) / 100) * parseFloat(inmueble);
+        const i = (parseFloat(interesAno) / 100) / 12;
+        const n = parseFloat(plazoAnos) * 12;
+        if (V <= 0 || n <= 0) return { cuota: null, total: null };
+
+        if (i === 0) {
+            const C = V / n;
+            return { cuota: C, total: V };
+        }
+
+        // Exact Cuota formulation
+        const exactC = V * (i / (1 - Math.pow(1 + i, -n)));
+        // BdE rounds the theoretical monthly cuota to 2 decimals
+        const cuotaMensual = Math.round(exactC * 100) / 100;
+
+        let totalPagado = 0;
+        let capitalPendiente = V;
+
+        // Simulate the month-by-month Bank of Spain amortization table
+        for (let m = 1; m <= n; m++) {
+            const interesMes = Math.round((capitalPendiente * i) * 100) / 100;
+            let cuotaMes = cuotaMensual;
+            let amortizadoMes = cuotaMes - interesMes;
+
+            // Adjust last month or if debt drops below expected cuota
+            if (m === n || (capitalPendiente + interesMes) <= cuotaMensual) {
+                cuotaMes = capitalPendiente + interesMes;
+                amortizadoMes = capitalPendiente;
+            }
+
+            capitalPendiente -= amortizadoMes;
+            totalPagado += cuotaMes;
+            
+            if (capitalPendiente <= 0) break;
+        }
+
+        return { cuota: cuotaMensual, total: totalPagado };
+    }
+
+    function recalcBankForm() {
+        // 1. Recalculate importe
         const pct = parseFloat(document.getElementById('banco-financiacion')?.value);
         const inmueble = state.conditions?.inmueble;
-        const disp = document.getElementById('banco-importe-display');
-        if (!disp) return;
-        if (pct > 0 && inmueble > 0) {
-            const calc = (pct / 100) * inmueble;
-            disp.textContent = calc.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-            disp.classList.add('has-value');
-        } else {
-            disp.textContent = '—';
-            disp.classList.remove('has-value');
+        const dispImporte = document.getElementById('banco-importe-display');
+        if (dispImporte) {
+            if (pct > 0 && inmueble > 0) {
+                const calc = (pct / 100) * inmueble;
+                dispImporte.textContent = calc.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+                dispImporte.classList.add('has-value');
+            } else {
+                dispImporte.textContent = '—';
+                dispImporte.classList.remove('has-value');
+            }
         }
+
+        // 2. Recalculate cuotas
+        const plazo = document.getElementById('banco-plazo')?.value;
+        const updateDisplay = (type) => {
+            const interes = document.getElementById(`fija-${type}-interes`)?.value;
+            const res = calculateMortgage(interes, plazo, pct, inmueble);
+            const dispCuota = document.getElementById(`fija-${type}-cuota-display`);
+            const dispTotal = document.getElementById(`fija-${type}-total-display`);
+            if (dispCuota && dispTotal) {
+                if (res.cuota) {
+                    dispCuota.textContent = res.cuota.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+                    dispCuota.classList.add('has-value');
+                    dispTotal.textContent = res.total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+                    dispTotal.classList.add('has-value');
+                } else {
+                    dispCuota.textContent = '—'; dispCuota.classList.remove('has-value');
+                    dispTotal.textContent = '—'; dispTotal.classList.remove('has-value');
+                }
+            }
+        };
+        updateDisplay('bon');
+        updateDisplay('nobon');
     }
 
     // ─── CRUD bancos ────────────────────────────
@@ -582,7 +651,7 @@ const App = (() => {
     return {
         saveConditions,
         openAddBankModal, openEditBankModal, closeBankModal, closeModalOnOverlay,
-        switchTab, toggleBonif, toggleGastoPagado, calcBancoImporte,
+        switchTab, toggleBonif, toggleGastoPagado, calculateMortgage, recalcBankForm,
         saveBank, deleteBank, reorderBanks,
         toggleBankVisibility,
         exportJSON, importJSON, resetAll,

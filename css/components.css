@@ -489,6 +489,9 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .bank-metric-label {
@@ -1325,7 +1328,9 @@ col.col-label {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loader-content p {
