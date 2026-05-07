@@ -2,6 +2,7 @@
    ROOT VARIABLES & RESET
    ============================================= */
 :root {
+  color-scheme: dark;
   --bg-primary: #0a0e1a;
   --bg-secondary: #111827;
   --bg-card: #141e33;
@@ -93,6 +94,7 @@ body {
    LIGHT MODE
    ============================================= */
 [data-theme="light"] {
+  color-scheme: light;
   --bg-primary: #f0f4ff;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;

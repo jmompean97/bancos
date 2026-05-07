@@ -13,16 +13,22 @@ const Amort = (() => {
     let _aniosDisponibles = [];
     let _stickyCleanup = null;
     let _amortizacionesExtra = {}; // key: numCuota -> { importe, tipo }
+    let _euriborData = {};         // key: 'YYYY-MM' -> rate
+    let _latestEuribor = 0;
+    let _latestEuriborDate = '';
 
     const LS_KEY = 'bancocomp-amort-inputs';
 
     // ─── Persistencia de inputs en localStorage ──
     function saveInputs() {
         const data = {
+            tipo: document.getElementById('amort-tipo')?.value || 'fija',
             capital: document.getElementById('amort-capital')?.value || '',
             interes: document.getElementById('amort-interes')?.value || '',
             plazo: document.getElementById('amort-plazo')?.value || '',
             fecha: document.getElementById('amort-fecha')?.value || '',
+            diferencial: document.getElementById('amort-diferencial')?.value || '',
+            aniosFijo: document.getElementById('amort-anios-fijo')?.value || '',
             extras: _amortizacionesExtra // save extra amortizations
         };
         localStorage.setItem(LS_KEY, JSON.stringify(data));
@@ -33,12 +39,16 @@ const Amort = (() => {
             const raw = localStorage.getItem(LS_KEY);
             if (!raw) return false;
             const data = JSON.parse(raw);
+            if (data.tipo) _setField('amort-tipo', data.tipo);
             if (data.capital) _setField('amort-capital', data.capital);
             if (data.interes) _setField('amort-interes', data.interes);
             if (data.plazo) _setField('amort-plazo', data.plazo);
             if (data.fecha) _setField('amort-fecha', data.fecha);
+            if (data.diferencial) _setField('amort-diferencial', data.diferencial);
+            if (data.aniosFijo) _setField('amort-anios-fijo', data.aniosFijo);
             if (data.extras) _amortizacionesExtra = data.extras;
-            return !!(data.capital && data.interes && data.plazo);
+            changeTipo(); // update UI
+            return !!(data.capital && data.plazo);
         } catch (_) { return false; }
     }
 
@@ -101,19 +111,69 @@ const Amort = (() => {
         return fecha.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
     }
 
+    // ─── Fetch Euribor ──────────────────────────
+    async function fetchEuribor() {
+        try {
+            const res = await fetch('https://data-api.ecb.europa.eu/service/data/FM/M.U2.EUR.RT.MM.EURIBOR1YD_.HSTA?detail=dataonly&format=jsondata');
+            const data = await res.json();
+            const obs = data.dataSets[0].series['0:0:0:0:0:0:0'].observations;
+            const periods = data.structure.dimensions.observation[0].values;
+            
+            for(let i = 0; i < periods.length; i++) {
+                const periodId = periods[i].id; // "2024-05"
+                if(obs[i]) {
+                    _euriborData[periodId] = obs[i][0];
+                    _latestEuribor = obs[i][0];
+                    _latestEuriborDate = periodId;
+                }
+            }
+            const el = document.getElementById('amort-euribor-val');
+            if(el) el.textContent = _latestEuribor.toFixed(3) + ' %';
+            const elDate = document.getElementById('euribor-date');
+            if(elDate) elDate.textContent = '(' + _latestEuriborDate + ')';
+            calcular();
+        } catch(e) {
+            console.error("Error fetching Euribor", e);
+            const el = document.getElementById('amort-euribor-val');
+            if(el) el.textContent = 'Error API';
+        }
+    }
+
+    // ─── UI: Change Tipo ────────────────────────
+    function changeTipo() {
+        const tipo = document.getElementById('amort-tipo')?.value || 'fija';
+        
+        const grpAnios = document.getElementById('grp-amort-anios-fijo');
+        const grpInt = document.getElementById('grp-amort-interes');
+        const grpDif = document.getElementById('grp-amort-diferencial');
+        const grpEur = document.getElementById('grp-amort-euribor');
+        const lblInt = document.getElementById('lbl-amort-interes');
+
+        if(tipo === 'fija') {
+            if(grpAnios) grpAnios.style.display = 'none';
+            if(grpInt) grpInt.style.display = '';
+            if(lblInt) lblInt.textContent = 'TIN Fijo (%)';
+            if(grpDif) grpDif.style.display = 'none';
+            if(grpEur) grpEur.style.display = 'none';
+        } else if(tipo === 'variable') {
+            if(grpAnios) grpAnios.style.display = 'none';
+            if(grpInt) grpInt.style.display = 'none';
+            if(grpDif) grpDif.style.display = '';
+            if(grpEur) grpEur.style.display = '';
+        } else if(tipo === 'mixta') {
+            if(grpAnios) grpAnios.style.display = '';
+            if(grpInt) grpInt.style.display = '';
+            if(lblInt) lblInt.textContent = 'TIN Fijo Inicial (%)';
+            if(grpDif) grpDif.style.display = '';
+            if(grpEur) grpEur.style.display = '';
+        }
+        calcular();
+    }
+
     // ─── Cálculo del cuadro (método francés BdE) ─
-    function buildCuadro(capital, interesAnual, plazoAnos, firstYear, firstMonth) {
-        const i = interesAnual / 100 / 12;
+    function buildCuadro(capital, plazoAnos, firstYear, firstMonth, tipo, interesFijo, diferencial, aniosFijo) {
         const n = plazoAnos * 12;
         const V = capital;
-
-        let cuotaMensual;
-        if (i === 0) {
-            cuotaMensual = Math.round((V / n) * 100) / 100;
-        } else {
-            const exactC = V * (i / (1 - Math.pow(1 + i, -n)));
-            cuotaMensual = Math.round(exactC * 100) / 100;
-        }
 
         const rows = [];
         let capitalPendiente = V;
@@ -127,6 +187,26 @@ const Amort = (() => {
         const todayM = today.getMonth() + 1;
         // Obtenemos el último día del mes actual (día 0 del mes siguiente)
         const isLastDay = today.getDate() === new Date(todayY, todayM, 0).getDate();
+
+        let currentInteresAnual = interesFijo;
+        if(tipo === 'variable') {
+            const yyyymm = `${year}-${month.toString().padStart(2, '0')}`;
+            const eur = _euriborData[yyyymm] !== undefined ? _euriborData[yyyymm] : _latestEuribor;
+            currentInteresAnual = eur + diferencial;
+        }
+
+        let lastInteresAnual = currentInteresAnual;
+        let i = Math.max(0, lastInteresAnual / 100 / 12);
+
+        let cuotaMensual;
+        if (i <= 0) {
+            cuotaMensual = Math.round((V / n) * 100) / 100;
+        } else {
+            const exactC = V * (i / (1 - Math.pow(1 + i, -n)));
+            cuotaMensual = Math.round(exactC * 100) / 100;
+        }
+
+
 
         for (let m = 1; m <= n; m++) {
             if (capitalPendiente <= 0) {
@@ -147,7 +227,36 @@ const Amort = (() => {
                 continue;
             }
 
-            const interesesMes = Math.round(capitalPendiente * i * 100) / 100;
+            // Determine interest for THIS month
+            let interesAnualMes = interesFijo;
+            if (tipo === 'variable') {
+                const yyyymm = `${year}-${month.toString().padStart(2, '0')}`;
+                const eur = _euriborData[yyyymm] !== undefined ? _euriborData[yyyymm] : _latestEuribor;
+                interesAnualMes = eur + diferencial;
+            } else if (tipo === 'mixta') {
+                if (m > aniosFijo * 12) {
+                    const yyyymm = `${year}-${month.toString().padStart(2, '0')}`;
+                    const eur = _euriborData[yyyymm] !== undefined ? _euriborData[yyyymm] : _latestEuribor;
+                    interesAnualMes = eur + diferencial;
+                }
+            }
+
+            if (interesAnualMes !== lastInteresAnual) {
+                // Recompute the quota for the remaining periods
+                lastInteresAnual = interesAnualMes;
+                i = Math.max(0, lastInteresAnual / 100 / 12);
+                let remainingPeriods = n - m + 1;
+                if (remainingPeriods > 0) {
+                    if (i <= 0) {
+                        cuotaMensual = Math.round((capitalPendiente / remainingPeriods) * 100) / 100;
+                    } else {
+                        const exactC = capitalPendiente * (i / (1 - Math.pow(1 + i, -remainingPeriods)));
+                        cuotaMensual = Math.round(exactC * 100) / 100;
+                    }
+                }
+            }
+
+            const interesesMes = i <= 0 ? 0 : Math.round(capitalPendiente * i * 100) / 100;
             let cuotaMes = cuotaMensual;
             let capitalMes = cuotaMes - interesesMes;
 
@@ -191,7 +300,7 @@ const Amort = (() => {
                 if (extra.tipo === 'cuota' && capitalPendiente > 0) {
                     let remainingPeriods = n - m;
                     if (remainingPeriods > 0) {
-                        if (i === 0) {
+                        if (i <= 0) {
                             cuotaMensual = Math.round((capitalPendiente / remainingPeriods) * 100) / 100;
                         } else {
                             const exactC = capitalPendiente * (i / (1 - Math.pow(1 + i, -remainingPeriods)));
@@ -217,6 +326,7 @@ const Amort = (() => {
                 totalInteresesAcum: Math.round(totalInteresesAcum * 100) / 100,
                 totalCapitalAcum: Math.round(totalCapitalAcum * 100) / 100,
                 extra: extraInfo,
+                isVariableStart: (tipo === 'mixta' && m === (aniosFijo * 12 + 1)),
                 isPaid
             });
 
@@ -230,16 +340,22 @@ const Amort = (() => {
     // ─── Calcular y renderizar ───────────────────
     function calcular() {
         const capital = parseFloat(document.getElementById('amort-capital')?.value);
-        const interes = parseFloat(document.getElementById('amort-interes')?.value);
         const plazo = parseInt(document.getElementById('amort-plazo')?.value, 10);
+        const tipo = document.getElementById('amort-tipo')?.value || 'fija';
+        const interesFijo = parseFloat(document.getElementById('amort-interes')?.value) || 0;
+        const diferencial = parseFloat(document.getElementById('amort-diferencial')?.value) || 0;
+        const aniosFijo = parseInt(document.getElementById('amort-anios-fijo')?.value, 10) || 0;
         const fechaEl = document.getElementById('amort-fecha')?.value; // "YYYY-MM"
 
         saveInputs();  // persistir siempre que el usuario escribe o cambia algo
 
-        if (!capital || !interes || !plazo || capital <= 0 || plazo <= 0 || interes < 0) {
+        // Basic validation
+        if (!capital || !plazo || capital <= 0 || plazo <= 0) {
             _hideAll();
             return;
         }
+        if (tipo === 'fija' && interesFijo < 0) { _hideAll(); return; }
+        if (tipo === 'mixta' && (interesFijo < 0 || aniosFijo <= 0)) { _hideAll(); return; }
 
         let firstYear, firstMonth;
         if (fechaEl) {
@@ -253,7 +369,7 @@ const Amort = (() => {
             _setField('amort-fecha', '2026-04');
         }
 
-        _cuadro = buildCuadro(capital, interes, plazo, firstYear, firstMonth);
+        _cuadro = buildCuadro(capital, plazo, firstYear, firstMonth, tipo, interesFijo, diferencial, aniosFijo);
         if (_cuadro.length === 0) { _hideAll(); return; }
 
         const totalIntereses = _cuadro.reduce((s, r) => s + r.intereses, 0);
@@ -267,7 +383,7 @@ const Amort = (() => {
         // Calcular contra caso base sin amortizaciones extra
         const oldExtras = _amortizacionesExtra;
         _amortizacionesExtra = {};
-        const cuadroBase = buildCuadro(capital, interes, plazo, firstYear, firstMonth);
+        const cuadroBase = buildCuadro(capital, plazo, firstYear, firstMonth, tipo, interesFijo, diferencial, aniosFijo);
         _amortizacionesExtra = oldExtras;
 
         const totalInteresesBase = cuadroBase.reduce((s, r) => s + r.intereses, 0);
@@ -428,7 +544,23 @@ const Amort = (() => {
                 ? `<span class="amort-paid-check" title="Cuota pagada"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>`
                 : '';
 
-            return `<tr class="amort-row ${r.isPaid ? 'is-paid' : ''}">
+            let changeHtml = '';
+            if (r.isVariableStart) {
+                changeHtml = `<tr class="amort-change-row">
+                    <td colspan="8">
+                        <div class="amort-change-content">
+                            <div class="amort-change-line"></div>
+                            <div class="amort-change-badge">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>
+                                INICIO TRAMO VARIABLE
+                            </div>
+                            <div class="amort-change-line"></div>
+                        </div>
+                    </td>
+                </tr>`;
+            }
+
+            return changeHtml + `<tr class="amort-row ${r.isPaid ? 'is-paid' : ''}">
                 <td class="amort-td-num">
                     <div style="display:flex; align-items:center; gap:0.5rem;">
                         ${r.num} ${paidHtml}
@@ -702,18 +834,18 @@ const Amort = (() => {
 
     // ─── Init: restaura inputs y calcula si hay datos ──
     function init() {
+        fetchEuribor();                  // Petición asíncrona del Euribor
         const hadSaved = loadInputs();   // restaura localStorage
         syncFromState();                 // rellena vacíos desde App.state
         // Si hay datos suficientes, calcular inmediatamente
         const capital = document.getElementById('amort-capital')?.value;
-        const interes = document.getElementById('amort-interes')?.value;
         const plazo = document.getElementById('amort-plazo')?.value;
-        if (capital && interes && plazo) calcular();
+        if (capital && plazo) calcular();
     }
 
     // ─── Public API ─────────────────────────────
     return {
-        calcular, filtrarAnio, redrawChart, syncFromState, init,
+        calcular, filtrarAnio, redrawChart, syncFromState, init, changeTipo,
         openExtraModal, closeExtraModal, closeExtraModalOnOverlay, calcExtraComision, saveExtraAmort, removeExtraAmort
     };
 

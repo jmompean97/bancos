@@ -66,7 +66,14 @@ cd bancos
 - **Hipoteca Fija** — Bonificada y No Bonificada
   - % Interés, cuota mensual, total a pagar
   - Comisiones de amortización anticipada (tramos 0-10 años y resto)
-  - **Condiciones dinámicas por banco**: personaliza el plazo hipotecario y el % de financiación. El importe financiado se calcula automáticamente sobre el valor de compraventa/tasación del inmueble.
+- **Hipoteca Variable** (¡Novedad!)
+  - Cálculo dinámico basado en Diferencial + Euríbor.
+  - Histórico de cuotas pasadas con el Euríbor real del mes.
+- **Hipoteca Mixta** (¡Novedad!)
+  - Tramo fijo inicial configurable y tramo variable posterior.
+  - Indicador visual en la tabla para marcar el cambio de tramo.
+
+**Condiciones dinámicas por banco**: personaliza el plazo hipotecario y el % de financiación. El importe financiado se calcula automáticamente sobre el valor de compraventa/tasación del inmueble.
 
 
 
@@ -105,8 +112,11 @@ La tabla se genera al instante y destaca:
 ### 📉 Módulo de Amortización (NUEVO)
 
 Una sección dedicada para calcular y simular tu hipoteca mes a mes con el **método francés**:
+- **Integración con API del BCE**: Sincronización automática con los datos oficiales del Banco Central Europeo para obtener el Euríbor a 1 año actualizado diariamente.
+- **Cálculo con Euríbor Histórico**: Recupera la media mensual del Euríbor de cada mes para calcular cuotas pasadas con precisión quirúrgica.
 - **Simulador de amortización anticipada**: añade aportaciones extra de capital indicando el mes, importe y si deseas reducir cuota o reducir plazo.
-- **Cálculo de comisiones automático**: calcula los costes que cobra el banco por amortizar anticipadamente (ej. 2% primeros 10 años, 1.5% el resto).
+- **Cálculo de comisiones automático**: calcula los costes que cobra el banco por amortizar anticipadamente.
+- **Visualizador de cambio de tramo**: En hipotecas mixtas, la tabla resalta exactamente cuándo termina el interés fijo y empieza el variable.
 - **Gráfico interactivo Chart.js**: visualiza la evolución del capital pendiente, capital amortizado e intereses acumulados con tooltips precisos.
 - **Cálculo exacto de ahorros**: descubre cuánto dinero y cuántos meses exactos de hipoteca te ahorras al realizar aportaciones extraordinarias.
 
