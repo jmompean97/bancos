@@ -122,6 +122,12 @@ const Amort = (() => {
         let totalInteresesAcum = 0;
         let totalCapitalAcum = 0;
 
+        const today = new Date();
+        const todayY = today.getFullYear();
+        const todayM = today.getMonth() + 1;
+        // Obtenemos el último día del mes actual (día 0 del mes siguiente)
+        const isLastDay = today.getDate() === new Date(todayY, todayM, 0).getDate();
+
         for (let m = 1; m <= n; m++) {
             if (capitalPendiente <= 0) {
                 rows.push({
@@ -133,7 +139,8 @@ const Amort = (() => {
                     capital: 0,
                     pendiente: 0,
                     pctPagado: 100,
-                    isSaved: true
+                    isSaved: true,
+                    isPaid: false
                 });
                 month++;
                 if (month > 12) { month = 1; year++; }
@@ -194,6 +201,10 @@ const Amort = (() => {
                 }
             }
 
+            const isPaid = (todayY > year) || 
+                           (todayY === year && todayM > month) || 
+                           (todayY === year && todayM === month && isLastDay);
+
             rows.push({
                 num: m,
                 year, month,
@@ -205,7 +216,8 @@ const Amort = (() => {
                 pctPagado: ((V - capitalPendiente) / V) * 100,
                 totalInteresesAcum: Math.round(totalInteresesAcum * 100) / 100,
                 totalCapitalAcum: Math.round(totalCapitalAcum * 100) / 100,
-                extra: extraInfo
+                extra: extraInfo,
+                isPaid
             });
 
             month++;
@@ -235,10 +247,10 @@ const Amort = (() => {
             firstYear = parseInt(parts[0], 10);
             firstMonth = parseInt(parts[1], 10);
         } else {
-            const now = new Date();
-            firstYear = now.getFullYear();
-            firstMonth = now.getMonth() + 2;
-            if (firstMonth > 12) { firstMonth = 1; firstYear++; }
+            // Forzar fecha de test a Abril 2026 si no hay nada introducido, para visualizar una cuota pagada
+            firstYear = 2026;
+            firstMonth = 4;
+            _setField('amort-fecha', '2026-04');
         }
 
         _cuadro = buildCuadro(capital, interes, plazo, firstYear, firstMonth);
@@ -412,8 +424,16 @@ const Amort = (() => {
                 extraHtml = `<button class="btn-amort-action" onclick="Amort.openExtraModal(${r.num}, ${r.pendiente})" title="Añadir amortización extra">⚡</button>`;
             }
 
-            return `<tr class="amort-row">
-                <td class="amort-td-num">${r.num}</td>
+            const paidHtml = r.isPaid 
+                ? `<span class="amort-paid-check" title="Cuota pagada"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>`
+                : '';
+
+            return `<tr class="amort-row ${r.isPaid ? 'is-paid' : ''}">
+                <td class="amort-td-num">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        ${r.num} ${paidHtml}
+                    </div>
+                </td>
                 <td class="amort-td-fecha">${r.label}</td>
                 <td class="amort-td-cuota">${fmt(r.cuota)}</td>
                 <td class="amort-td-int">${fmt(r.intereses)}</td>
