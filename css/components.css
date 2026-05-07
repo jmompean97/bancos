@@ -1348,3 +1348,429 @@ col.col-label {
   background: radial-gradient(circle at center, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
   pointer-events: none;
 }
+
+/* =============================================
+   MAIN NAV (Comparador / Amortización)
+   ============================================= */
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 0.2rem;
+}
+
+.main-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1rem;
+  border-radius: calc(var(--radius-md) - 2px);
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.main-nav-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.main-nav-btn:hover {
+  color: var(--text-secondary);
+  background: var(--glass);
+}
+
+.main-nav-btn.active {
+  background: var(--gradient-blue);
+  color: white;
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Mobile nav: hidden on desktop, shown on mobile */
+.mobile-nav {
+  display: none;
+  gap: 0.25rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.mobile-nav-btn {
+  flex: 1;
+  padding: 0.55rem 1rem;
+  border-radius: calc(var(--radius-md) - 2px);
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+}
+
+.mobile-nav-btn:hover {
+  color: var(--text-secondary);
+  background: var(--glass);
+}
+
+.mobile-nav-btn.active {
+  background: var(--gradient-blue);
+  color: white;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+}
+
+/* =============================================
+   APP VIEWS
+   ============================================= */
+.app-view {
+  display: none;
+}
+
+.app-view.active {
+  display: contents;
+}
+
+/* =============================================
+   AMORTIZACIÓN — FORM GRID
+   ============================================= */
+.amort-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* =============================================
+   AMORTIZACIÓN — SUMMARY CARDS
+   ============================================= */
+.amort-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  animation: fadeInUp 0.3s ease both;
+}
+
+.amort-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.1rem 1.4rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.amort-summary-card:hover {
+  border-color: rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.amort-summary-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.amort-summary-value {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.amort-summary-value.accent-orange {
+  color: var(--accent-orange);
+}
+
+.amort-summary-value.accent-blue {
+  color: var(--accent-blue-light);
+}
+
+/* =============================================
+   AMORTIZACIÓN — CHART
+   ============================================= */
+.amort-chart-wrap {
+  width: 100%;
+  position: relative;
+  height: 280px; /* Chart.js necesita una altura definida en el contenedor */
+}
+
+.amort-chart-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.amort-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.amort-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.amort-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* =============================================
+   AMORTIZACIÓN — TABLE
+   ============================================= */
+.amort-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.amort-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.amort-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-table-header);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.15);
+  white-space: nowrap;
+}
+
+.amort-table.sticky-clone thead th {
+  background: transparent;
+}
+
+.amort-table thead th:first-child {
+  border-radius: var(--radius-md) 0 0 0;
+}
+
+.amort-table thead th:last-child {
+  border-radius: 0 var(--radius-md) 0 0;
+}
+
+.amort-row td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.amort-row:last-child td {
+  border-bottom: none;
+}
+
+.amort-row:hover td {
+  background: var(--tr-hover-bg);
+}
+
+/* Columnas específicas */
+.amort-td-num {
+  color: var(--text-muted) !important;
+  font-size: 0.78rem;
+  font-weight: 500;
+  width: 48px;
+  min-width: 48px;
+}
+
+.amort-td-fecha {
+  font-size: 0.82rem;
+  color: var(--text-muted) !important;
+  min-width: 100px;
+}
+
+.amort-td-cuota {
+  font-weight: 700;
+  color: var(--text-primary) !important;
+}
+
+.amort-td-int {
+  color: #f87171 !important;
+}
+
+.amort-td-cap {
+  color: #34d399 !important;
+}
+
+.amort-td-pend {
+  font-weight: 600;
+  color: var(--accent-blue-light) !important;
+  max-width: 110px;
+  /* Reducir ancho */
+}
+
+.amort-td-extra {
+  width: 90px;
+  min-width: 90px;
+  text-align: right;
+  padding-right: 1rem !important;
+}
+
+.btn-amort-action {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-amort-action:hover {
+  background: var(--bg-secondary);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-amort-action.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.btn-amort-action.active:hover {
+  background: var(--primary-hover);
+}
+
+.extra-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-right: 0.4rem;
+  text-align: right;
+  line-height: 1.1;
+  vertical-align: middle;
+}
+
+.extra-badge small {
+  opacity: 0.8;
+  font-size: 0.65rem;
+}
+
+/* Barra de progreso % pagado */
+.amort-pct-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 110px;
+}
+
+.amort-pct-bar {
+  height: 6px;
+  border-radius: 99px;
+  flex-shrink: 0;
+  transition: width 0.3s ease;
+}
+
+.amort-pct-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 42px;
+}
+
+/* Filter label */
+.amort-year-filter-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-nav {
+    display: none;
+  }
+
+  .mobile-nav {
+    display: flex;
+  }
+
+  .amort-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .amort-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .amort-chart-legend {
+    margin-left: 0;
+    margin-top: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .amort-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .amort-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Light mode adjustments */
+[data-theme="light"] .amort-table thead th {
+  background: var(--bg-table-header);
+  border-bottom-color: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="light"] .amort-td-int {
+  color: #dc2626 !important;
+}
+
+[data-theme="light"] .amort-td-cap {
+  color: #059669 !important;
+}
+
+[data-theme="light"] .amort-td-pend {
+  color: #2563eb !important;
+}

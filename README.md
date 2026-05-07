@@ -36,8 +36,8 @@ Si vas a utilizar la opción de sincronización en la nube mediante **GitHub Gis
 ```bash
 git clone https://github.com/jmompean97/bancos.git
 cd bancos
-python3 -m http.server 8080
-# Abre http://localhost:8080 en tu navegador
+python3 -m http.server 8082
+# Abre http://localhost:8082 en tu navegador
 ```
 
 ### Opción B — Abrir archivo suelto
@@ -102,6 +102,14 @@ La tabla se genera al instante y destaca:
 - 🔴 **Rojo** → Peor valor entre todos los bancos
 - **—** → Dato no introducido (no penaliza)
 
+### 📉 Módulo de Amortización (NUEVO)
+
+Una sección dedicada para calcular y simular tu hipoteca mes a mes con el **método francés**:
+- **Simulador de amortización anticipada**: añade aportaciones extra de capital indicando el mes, importe y si deseas reducir cuota o reducir plazo.
+- **Cálculo de comisiones automático**: calcula los costes que cobra el banco por amortizar anticipadamente (ej. 2% primeros 10 años, 1.5% el resto).
+- **Gráfico interactivo Chart.js**: visualiza la evolución del capital pendiente, capital amortizado e intereses acumulados con tooltips precisos.
+- **Cálculo exacto de ahorros**: descubre cuánto dinero y cuántos meses exactos de hipoteca te ahorras al realizar aportaciones extraordinarias.
+
 ---
 
 ## 💾 Persistencia de datos
@@ -146,6 +154,7 @@ bancos/
 │   ├── ui.js       # Renderizado de UI y eventos
 │   ├── db.js       # Capa de almacenamiento en IndexedDB
 │   ├── gist.js     # Cliente API de GitHub Gist
+│   ├── amort.js    # Motor financiero y UI del módulo de amortización
 
 └── README.md       # Este archivo
 ```
@@ -159,7 +168,7 @@ bancos/
 - **Light y Dark Mode** soportados con switch en tiempo real
 - **Layout principal** fluido hasta 1550px para aprovechar monitores anchos
 - **Glassmorphism** en tarjetas y modales (`backdrop-filter: blur`)
-- **Tipografía**: Inter + Space Grotesk (Google Fonts)
+- **Tipografía**: Nativas del sistema operativo (`system-ui`) para máxima velocidad y **cero dependencias** de red.
 - **Animaciones**: `fadeInUp` en secciones, `cardIn` en tarjetas de banco, rebote en modal
 - **Colores por banco**: 6 paletas de gradiente únicas, asignadas automáticamente
 - **Responsive**: adaptado a móvil, tablet y escritorio
@@ -185,8 +194,8 @@ https://jmompean97.github.io/bancos/
 ## 🔭 Roadmap / Ideas futuras
 
 - [x] **Sincronización via GitHub Gist** — guarda el JSON en un Gist privado tuyo y sincroniza automáticamente usando tu Personal Access Token
-- [ ] **Modo comparación visual con gráficos** — barras o radar chart para ver rápidamente qué banco gana en cada categoría
-- [ ] **Calculadora de cuota** — calcula la cuota mensual automáticamente dado importe, plazo y tipo de interés
+- [x] **Calculadora de cuota y Amortización** — calcula la cuota mensual automáticamente, y visualiza la amortización mes a mes y amortizaciones extra.
+- [x] **Modo comparación visual con gráficos** — gráfico dinámico y responsivo con Chart.js para ver la amortización.
 - [ ] **Ahorro real con bonificaciones** — calcula si compensa contratar cada producto vinculado (reducción de interés vs coste anual del seguro)
 - [ ] **Compartir via URL** — codifica el estado en la URL para compartir tu comparativa sin exportar ficheros
 

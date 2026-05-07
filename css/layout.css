@@ -19,16 +19,22 @@
 .header-inner {
   max-width: 1550px;
   margin: 0 auto;
-  height: 64px;
+  min-height: 64px;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .header-top {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
+  flex: 1;
 }
 
 .logo {
@@ -183,9 +189,9 @@
   flex-wrap: wrap;
 }
 
-.section-header>div:nth-child(2) {
+/* .section-header>div:nth-child(2) {
   flex: 1;
-}
+} */
 
 .step-badge {
   width: 36px;

@@ -657,10 +657,15 @@ const App = (() => {
         exportJSON, importJSON, resetAll,
         openGistModal, closeGistModal, closeGistModalOnOverlay,
         connectGist, disconnectGist,
+        getState: () => state,   // ← expuesto para Amort.syncFromState()
         init,
     };
 
 })();
 
 // Arrancar la app
-App.init();
+App.init().then(() => {
+    // Una vez que App ha cargado el estado (bancos, condiciones),
+    // inicializar Amort para que pueda sincronizar desde él
+    if (typeof Amort !== 'undefined') Amort.init();
+});

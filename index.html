@@ -7,11 +7,6 @@
     <title>Comparador Hipotecas | BancoComp</title>
     <meta name="description"
         content="Compara las condiciones hipotecarias de diferentes bancos de forma visual e intuitiva. Hipotecas fijas, mixtas, gastos y bonificaciones." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-        rel="stylesheet" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="css/variables.css" />
     <link rel="stylesheet" href="css/layout.css" />
@@ -56,11 +51,39 @@
                     <span class="logo-text">BancoComp</span>
                 </div>
 
+                <!-- Main nav tabs -->
+                <nav class="main-nav" role="navigation" aria-label="Secciones principales">
+                    <button class="main-nav-btn active" id="nav-amortizacion" onclick="Views.show('amortizacion')">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M3 3v18h18M7 16l4-4 4 4 4-6" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Amortización
+                    </button>
+                    <button class="main-nav-btn" id="nav-comparador" onclick="Views.show('comparador')">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Comparador
+                    </button>
+                </nav>
+
                 <!-- Sync status pill -->
                 <div class="sync-status sync-offline" id="sync-status">
                     <span class="sync-icon">🟡</span>
                     <span class="sync-text">Sin Gist</span>
                 </div>
+            </div>
+
+            <!-- Mobile nav select (only visible on mobile) -->
+            <div class="mobile-nav">
+                <button class="mobile-nav-btn active" id="mobile-nav-amortizacion" onclick="Views.show('amortizacion')">
+                    Amortización
+                </button>
+                <button class="mobile-nav-btn" id="mobile-nav-comparador" onclick="Views.show('comparador')">
+                    Comparador
+                </button>
             </div>
 
             <div class="header-actions">
@@ -120,106 +143,280 @@
 
     <!-- ===== MAIN ===== -->
     <main class="app-main">
+        <!-- ====== VIEW: COMPARADOR ====== -->
+        <div id="view-comparador" class="app-view">
 
-        <!-- STEP 1: Mortgage Conditions -->
-        <section class="section conditions-section" id="section-conditions">
-            <div class="section-header">
-                <div class="step-badge">1</div>
-                <div>
-                    <h2 class="section-title">Condiciones de la hipoteca</h2>
-                    <p class="section-desc">Introduce los datos generales de tu solicitud hipotecaria</p>
+            <!-- STEP 1: Mortgage Conditions -->
+            <section class="section conditions-section" id="section-conditions">
+                <div class="section-header">
+                    <div class="step-badge">1</div>
+                    <div>
+                        <h2 class="section-title">Condiciones de la hipoteca</h2>
+                        <p class="section-desc">Introduce los datos generales de tu solicitud hipotecaria</p>
+                    </div>
                 </div>
-            </div>
-            <div class="conditions-grid">
-                <div class="form-group">
-                    <label class="form-label" for="importe">Importe solicitado (€)</label>
-                    <input class="form-input" type="number" id="importe" placeholder="200.000" min="0" step="1000" />
+                <div class="conditions-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="importe">Importe solicitado (€)</label>
+                        <input class="form-input" type="number" id="importe" placeholder="200.000" min="0"
+                            step="1000" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="valor-inmueble">Valor del inmueble (€)</label>
+                        <input class="form-input" type="number" id="valor-inmueble" placeholder="250.000" min="0"
+                            step="1000" />
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="valor-inmueble">Valor del inmueble (€)</label>
-                    <input class="form-input" type="number" id="valor-inmueble" placeholder="250.000" min="0"
-                        step="1000" />
+                <div class="conditions-summary" id="conditions-summary" style="display:none;">
+                    <div class="summary-item"><span class="summary-label">Importe</span><span class="summary-value"
+                            id="sum-importe">—</span></div>
+                    <div class="summary-item"><span class="summary-label">Valor inmueble</span><span
+                            class="summary-value" id="sum-inmueble">—</span></div>
+                    <div class="summary-item"><span class="summary-label">% Financiación (calculado)</span><span
+                            class="summary-value" id="sum-financiacion">—</span></div>
                 </div>
-            </div>
-            <div class="conditions-summary" id="conditions-summary" style="display:none;">
-                <div class="summary-item"><span class="summary-label">Importe</span><span class="summary-value"
-                        id="sum-importe">—</span></div>
-                <div class="summary-item"><span class="summary-label">Valor inmueble</span><span class="summary-value"
-                        id="sum-inmueble">—</span></div>
-                <div class="summary-item"><span class="summary-label">% Financiación (calculado)</span><span
-                        class="summary-value" id="sum-financiacion">—</span></div>
-            </div>
-            <button class="btn btn-primary" id="btn-conditions" onclick="App.saveConditions()">
-                <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                </svg>
-                Guardar condiciones
-            </button>
-        </section>
-
-        <!-- STEP 2: Banks -->
-        <section class="section banks-section" id="section-banks">
-            <div class="section-header">
-                <div class="step-badge">2</div>
-                <div>
-                    <h2 class="section-title">Bancos comparados</h2>
-                    <p class="section-desc">Añade los bancos y sus condiciones hipotecarias</p>
-                </div>
-                <button class="btn btn-add" id="btn-add-bank" onclick="App.openAddBankModal()">
+                <button class="btn btn-primary" id="btn-conditions" onclick="App.saveConditions()">
                     <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                        <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
-                    Añadir banco
+                    Guardar condiciones
                 </button>
-            </div>
-            <div class="banks-grid" id="banks-grid">
-                <div class="empty-state" id="empty-state">
-                    <div class="empty-icon">
+            </section>
+
+            <!-- STEP 2: Banks -->
+            <section class="section banks-section" id="section-banks">
+                <div class="section-header">
+                    <div class="step-badge">2</div>
+                    <div>
+                        <h2 class="section-title">Bancos comparados</h2>
+                        <p class="section-desc">Añade los bancos y sus condiciones hipotecarias</p>
+                    </div>
+                    <button class="btn btn-add" id="btn-add-bank" onclick="App.openAddBankModal()">
                         <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M3 21H21M3 10H21M5 6L12 3L19 6M4 10V21M20 10V21M8 14V17M12 14V17M16 14V17"
-                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" />
+                        </svg>
+                        Añadir banco
+                    </button>
+                </div>
+                <div class="banks-grid" id="banks-grid">
+                    <div class="empty-state" id="empty-state">
+                        <div class="empty-icon">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M3 21H21M3 10H21M5 6L12 3L19 6M4 10V21M20 10V21M8 14V17M12 14V17M16 14V17"
+                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <p class="empty-title">Ningún banco añadido</p>
+                        <p class="empty-desc">Pulsa "Añadir banco" para comenzar la comparativa</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 3: Comparison Table -->
+            <section class="section compare-section" id="section-compare" style="display:none;">
+                <div class="section-header">
+                    <div class="step-badge">3</div>
+                    <div>
+                        <h2 class="section-title">Tabla comparativa</h2>
+                        <p class="section-desc">Comparativa detallada de condiciones entre bancos</p>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                        <button class="btn btn-outline" onclick="App.exportJSON()" id="btn-export-table">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path
+                                    d="M21 15V19C21 19.53 20.79 20.04 20.41 20.41C20.04 20.79 19.53 21 19 21H5C4.47 21 3.96 20.79 3.59 20.41C3.21 20.04 3 19.53 3 19V15M7 10L12 15L17 10M12 15V3"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            JSON
+                        </button>
+                        <button class="btn btn-outline" onclick="window.print()" id="btn-print">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path
+                                    d="M6 9V2H18V9M6 18H4C3.47 18 2.96 17.79 2.59 17.41C2.21 17.04 2 16.53 2 16V11C2 10.47 2.21 9.96 2.59 9.59C2.96 9.21 3.47 9 4 9H20C20.53 9 21.04 9.21 21.41 9.59C21.79 9.96 22 10.47 22 11V16C22 16.53 21.79 17.04 21.41 17.41C21.04 17.79 20.53 18 20 18H18M6 14H18V22H6V14Z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            Imprimir
+                        </button>
+                    </div>
+                </div>
+                <div id="bank-filter" class="bank-filter" style="display:none;"></div>
+                <div class="compare-wrapper" id="compare-wrapper"></div>
+            </section>
+
+        </div><!-- /view-comparador -->
+
+        <!-- ====== VIEW: AMORTIZACIÓN ====== -->
+        <div id="view-amortizacion" class="app-view active">
+
+            <!-- FORM: Condiciones finales -->
+            <section class="section amort-config-section" id="section-amort-config">
+                <div class="section-header">
+                    <div class="step-badge" style="background: var(--gradient-green);">
+                        <svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px;">
+                            <path d="M3 3v18h18M7 16l4-4 4 4 4-6" stroke="white" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round" />
                         </svg>
                     </div>
-                    <p class="empty-title">Ningún banco añadido</p>
-                    <p class="empty-desc">Pulsa "Añadir banco" para comenzar la comparativa</p>
+                    <div>
+                        <h2 class="section-title">Amortización</h2>
+                        <p class="section-desc">Introduce las condiciones finales del préstamo para ver el cuadro de
+                            amortización mes a mes</p>
+                    </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- STEP 3: Comparison Table -->
-        <section class="section compare-section" id="section-compare" style="display:none;">
-            <div class="section-header">
-                <div class="step-badge">3</div>
-                <div>
-                    <h2 class="section-title">Tabla comparativa</h2>
-                    <p class="section-desc">Comparativa detallada de condiciones entre bancos</p>
+                <div class="amort-form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="amort-capital">Capital financiado (€)</label>
+                        <input class="form-input" type="number" id="amort-capital" placeholder="160.000" min="0"
+                            step="1000" oninput="Amort.calcular()" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="amort-interes">Tipo de interés TIN anual (%)</label>
+                        <input class="form-input" type="number" id="amort-interes" placeholder="2.50" step="0.01"
+                            min="0" oninput="Amort.calcular()" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="amort-plazo">Plazo (años)</label>
+                        <input class="form-input" type="number" id="amort-plazo" placeholder="25" min="1" max="40"
+                            oninput="Amort.calcular()" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="amort-fecha">Fecha primera cuota</label>
+                        <input class="form-input" type="month" id="amort-fecha" oninput="Amort.calcular()" />
+                    </div>
                 </div>
-                <div style="display:flex;gap:0.5rem;margin-left:auto;">
-                    <button class="btn btn-outline" onclick="App.exportJSON()" id="btn-export-table">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M21 15V19C21 19.53 20.79 20.04 20.41 20.41C20.04 20.79 19.53 21 19 21H5C4.47 21 3.96 20.79 3.59 20.41C3.21 20.04 3 19.53 3 19V15M7 10L12 15L17 10M12 15V3"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        JSON
-                    </button>
-                    <button class="btn btn-outline" onclick="window.print()" id="btn-print">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M6 9V2H18V9M6 18H4C3.47 18 2.96 17.79 2.59 17.41C2.21 17.04 2 16.53 2 16V11C2 10.47 2.21 9.96 2.59 9.59C2.96 9.21 3.47 9 4 9H20C20.53 9 21.04 9.21 21.41 9.59C21.79 9.96 22 10.47 22 11V16C22 16.53 21.79 17.04 21.41 17.41C21.04 17.79 20.53 18 20 18H18M6 14H18V22H6V14Z"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        Imprimir
-                    </button>
+
+                <!-- Summary cards -->
+                <div class="amort-summary" id="amort-summary" style="display:none;">
+                    <div class="amort-summary-card">
+                        <span class="amort-summary-label">Cuota mensual</span>
+                        <span class="amort-summary-value" id="amort-sum-cuota">—</span>
+                    </div>
+                    <div class="amort-summary-card">
+                        <span class="amort-summary-label">Total intereses</span>
+                        <span class="amort-summary-value accent-orange" id="amort-sum-intereses">—</span>
+                    </div>
+                    <div class="amort-summary-card">
+                        <span class="amort-summary-label">Total pagado</span>
+                        <span class="amort-summary-value" id="amort-sum-total">—</span>
+                    </div>
+                    <div class="amort-summary-card">
+                        <span class="amort-summary-label">Nº cuotas</span>
+                        <span class="amort-summary-value accent-blue" id="amort-sum-cuotas">—</span>
+                    </div>
                 </div>
-            </div>
-            <div id="bank-filter" class="bank-filter" style="display:none;"></div>
-            <div class="compare-wrapper" id="compare-wrapper"></div>
-        </section>
+            </section>
+
+            <!-- Chart section -->
+            <section class="section" id="section-amort-chart" style="display:none;">
+                <div class="section-header" style="margin-bottom:1rem;">
+                    <div>
+                        <h2 class="section-title" style="font-size:1.1rem;">Evolución del préstamo</h2>
+                        <p class="section-desc">Cómo evoluciona el capital pendiente, los intereses y la amortización a
+                            lo largo del tiempo</p>
+                    </div>
+                    <div class="amort-chart-legend">
+                        <span class="amort-legend-item"><span class="amort-legend-dot"
+                                style="background:#3b82f6"></span>Capital pendiente</span>
+                        <span class="amort-legend-item"><span class="amort-legend-dot"
+                                style="background:#ef4444"></span>Intereses acumulados</span>
+                        <span class="amort-legend-item"><span class="amort-legend-dot"
+                                style="background:#10b981"></span>Capital amortizado</span>
+                    </div>
+                </div>
+                <div class="amort-chart-wrap">
+                    <canvas id="amort-chart" height="260"></canvas>
+                </div>
+            </section>
+
+            <!-- Table section -->
+            <section class="section" id="section-amort-table" style="display:none;">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title" style="font-size:1.1rem;">Cuadro de amortización mensual</h2>
+                        <p class="section-desc">Desglose de cada cuota: intereses, capital amortizado y deuda pendiente
+                        </p>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;align-items:center;margin-left:auto;">
+                        <label class="amort-year-filter-label" for="amort-year-filter">Año:</label>
+                        <select class="form-input" id="amort-year-filter" onchange="Amort.filtrarAnio()"
+                            style="width:auto;padding:0.4rem 0.7rem;font-size:0.82rem;"></select>
+                    </div>
+                </div>
+                <div class="amort-table-wrap">
+                    <table class="amort-table" id="amort-table">
+                        <thead>
+                            <tr>
+                                <th>Nº Cuota</th>
+                                <th>Fecha</th>
+                                <th>Cuota total</th>
+                                <th>Intereses</th>
+                                <th>Capital</th>
+                                <th>Pendiente</th>
+                                <th>% Pagado</th>
+                                <th style="text-align:right">Amort. Ant.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="amort-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div><!-- /view-amortizacion -->
 
     </main>
+
+    <!-- ===== MODAL AMORTIZACIÓN ANTICIPADA ===== -->
+    <div class="modal-overlay" id="modal-amort-extra" onclick="Amort.closeExtraModalOnOverlay(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title">Amortización anticipada</h3>
+                <button class="modal-close" onclick="Amort.closeExtraModal()" aria-label="Cerrar"
+                    style="font-size: 1.5rem; line-height: 1;">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                    Cuota seleccionada: <strong id="extra-modal-cuota"></strong>
+                    <br>Capital pendiente: <strong id="extra-modal-pend"></strong>
+                </p>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label class="form-label" for="extra-importe">Importe a adelantar (€)</label>
+                    <input class="form-input" type="number" id="extra-importe" placeholder="10000" min="1" step="100"
+                        oninput="Amort.calcExtraComision()" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="extra-tipo">¿Qué deseas reducir?</label>
+                    <select class="form-input" id="extra-tipo">
+                        <option value="plazo">Reducir plazo (acabar antes)</option>
+                        <option value="cuota">Reducir cuota (pagar menos cada mes)</option>
+                    </select>
+                </div>
+                <div
+                    style="font-size:0.8rem; color:var(--text-muted); background:var(--glass); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-sm); margin-top:1rem;">
+                    <strong>Comisión estimada:</strong> <span id="extra-modal-comision">—</span>
+                    <p style="margin-top:0.25rem; font-size:0.75rem; opacity:0.8;">(2% primeros 10 años, 1.5% del año 11
+                        al 20, 0% resto)</p>
+                </div>
+                <input type="hidden" id="extra-num-cuota" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-extra-remove"
+                    style="display:none; color:#ef4444; border-color:#ef4444;"
+                    onclick="Amort.removeExtraAmort()">Eliminar</button>
+                <div style="flex:1"></div>
+                <button class="btn btn-outline" onclick="Amort.closeExtraModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="Amort.saveExtraAmort()">Aplicar</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- ===== FOOTER ===== -->
     <footer class="app-footer">
@@ -265,7 +462,8 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group"><label class="form-label">Plazo hipoteca (años)</label><input
-                                class="form-input" type="number" id="banco-plazo" placeholder="20" min="1" max="40" oninput="App.recalcBankForm()" />
+                                class="form-input" type="number" id="banco-plazo" placeholder="20" min="1" max="40"
+                                oninput="App.recalcBankForm()" />
                         </div>
                         <div class="form-group"><label class="form-label">% Financiado por el banco</label><input
                                 class="form-input" type="number" step="0.1" id="banco-financiacion" placeholder="80"
@@ -281,7 +479,8 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group"><label class="form-label">% Interés TIN</label><input class="form-input"
-                                type="number" step="0.01" id="fija-bon-interes" placeholder="2.50" oninput="App.recalcBankForm()" /></div>
+                                type="number" step="0.01" id="fija-bon-interes" placeholder="2.50"
+                                oninput="App.recalcBankForm()" /></div>
                         <div class="form-group">
                             <label class="form-label">Cuota mensual (calculada)</label>
                             <div class="banco-importe-calc" id="fija-bon-cuota-display">—</div>
@@ -296,7 +495,8 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group"><label class="form-label">% Interés TIN</label><input class="form-input"
-                                type="number" step="0.01" id="fija-nobon-interes" placeholder="3.20" oninput="App.recalcBankForm()" /></div>
+                                type="number" step="0.01" id="fija-nobon-interes" placeholder="3.20"
+                                oninput="App.recalcBankForm()" /></div>
                         <div class="form-group">
                             <label class="form-label">Cuota mensual (calculada)</label>
                             <div class="banco-importe-calc" id="fija-nobon-cuota-display">—</div>
@@ -638,10 +838,13 @@
             return { toggle };
         })();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/db.js"></script>
     <script src="js/gist.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/views.js"></script>
+    <script src="js/amort.js"></script>
 </body>
 
 </html>
