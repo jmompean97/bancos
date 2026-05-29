@@ -289,8 +289,20 @@
                             oninput="Amort.calcular()" />
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="amort-fecha">Fecha primera cuota</label>
-                        <input class="form-input" type="month" id="amort-fecha" oninput="Amort.calcular()" />
+                        <label class="form-label" for="amort-fecha">
+                            Fecha de firma
+                            <span class="info-icon" tabindex="0" role="tooltip"
+                                aria-label="Si firmaste a mitad de mes, la 1ª cuota se calcula proporcional automáticamente"
+                                onclick="this.classList.toggle('open')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="8.01"/>
+                                    <path d="M12 12v4"/>
+                                </svg>
+                                <span class="info-popup">Si firmaste a mitad de mes, la 1ª cuota se calcula proporcional automáticamente (intereses de los días restantes del mes de firma)</span>
+                            </span>
+                        </label>
+                        <input class="form-input" type="date" id="amort-fecha" oninput="Amort.calcular()" />
                     </div>
 
                     <div class="form-group" id="grp-amort-anios-fijo" style="display:none;">
@@ -870,6 +882,14 @@
     <script src="js/app.js"></script>
     <script src="js/views.js"></script>
     <script src="js/amort.js"></script>
+    <script>
+        // Close any open info-icon tooltip when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.info-icon')) {
+                document.querySelectorAll('.info-icon.open').forEach(el => el.classList.remove('open'));
+            }
+        });
+    </script>
 </body>
 
 </html>

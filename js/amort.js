@@ -171,25 +171,81 @@ const Amort = (() => {
     }
 
     // ─── Cálculo del cuadro (método francés BdE) ─
-    function buildCuadro(capital, plazoAnos, firstYear, firstMonth, tipo, interesFijo, diferencial, aniosFijo) {
+    // signingDay: día del mes en que se firmó la hipoteca (1–31).
+    // Si es > 1, se inserta una fila 0 con los intereses proporcionales del
+    // período desde la firma hasta fin de mes, calculados como:
+    //   capital × (TIN/100) × (días_restantes / 365)
+    // donde días_restantes = días del mes − día firma.
+    // Las cuotas regulares arrancan el mes siguiente y se numeran desde 2.
+    function buildCuadro(capital, plazoAnos, firstYear, firstMonth, tipo, interesFijo, diferencial, aniosFijo, signingDay) {
         const n = plazoAnos * 12;
         const V = capital;
 
         const rows = [];
-        let capitalPendiente = V;
-        let year = firstYear;
-        let month = firstMonth;
-        let totalInteresesAcum = 0;
-        let totalCapitalAcum = 0;
-
         const today = new Date();
         const todayY = today.getFullYear();
         const todayM = today.getMonth() + 1;
-        // Obtenemos el último día del mes actual (día 0 del mes siguiente)
         const isLastDay = today.getDate() === new Date(todayY, todayM, 0).getDate();
 
+        // ─── Período inicial parcial (firma a mitad de mes) ───
+        let numOffset = 0;              // offset de numeración para cuotas regulares
+        let regularYear  = firstYear;
+        let regularMonth = firstMonth;
+        let totalInteresesAcum = 0;
+        let totalCapitalAcum   = 0;
+
+        if (signingDay && signingDay > 1) {
+            numOffset = 1;
+            const daysInMonth   = new Date(firstYear, firstMonth, 0).getDate(); // último día del mes
+            const daysRemaining = daysInMonth - signingDay;                     // días desde el día siguiente a la firma hasta fin de mes
+
+            // Tipo de interés aplicable al período parcial
+            let rateForBroken = interesFijo;
+            if (tipo === 'variable') {
+                const yyyymm = `${firstYear}-${firstMonth.toString().padStart(2, '0')}`;
+                const eur = _euriborData[yyyymm] !== undefined ? _euriborData[yyyymm] : _latestEuribor;
+                rateForBroken = eur + diferencial;
+            }
+            // mixta: el período inicial siempre cae en el tramo fijo
+
+            const brokenInterest = daysRemaining > 0
+                ? Math.round(capital * (rateForBroken / 100) * (daysRemaining / 365) * 100) / 100
+                : 0;
+
+            totalInteresesAcum = brokenInterest;
+
+            const isPaidBroken = (todayY > firstYear) ||
+                                 (todayY === firstYear && todayM > firstMonth) ||
+                                 (todayY === firstYear && todayM === firstMonth && isLastDay);
+
+            rows.push({
+                num: 1,
+                year: firstYear, month: firstMonth,
+                label: mesLabel(firstYear, firstMonth),
+                cuota: brokenInterest,
+                intereses: brokenInterest,
+                capital: 0,
+                pendiente: capital,
+                pctPagado: 0,
+                totalInteresesAcum: Math.round(totalInteresesAcum * 100) / 100,
+                totalCapitalAcum: 0,
+                extra: null,
+                isBrokenPeriod: true,   // marcador para el renderer
+                isPaid: isPaidBroken
+            });
+
+            // Las cuotas regulares arrancan el mes siguiente
+            regularMonth = firstMonth + 1;
+            if (regularMonth > 12) { regularMonth = 1; regularYear = firstYear + 1; }
+        }
+
+        // ─── Amortización francesa regular ───
+        let capitalPendiente = V;
+        let year  = regularYear;
+        let month = regularMonth;
+
         let currentInteresAnual = interesFijo;
-        if(tipo === 'variable') {
+        if (tipo === 'variable') {
             const yyyymm = `${year}-${month.toString().padStart(2, '0')}`;
             const eur = _euriborData[yyyymm] !== undefined ? _euriborData[yyyymm] : _latestEuribor;
             currentInteresAnual = eur + diferencial;
@@ -206,18 +262,13 @@ const Amort = (() => {
             cuotaMensual = Math.round(exactC * 100) / 100;
         }
 
-
-
         for (let m = 1; m <= n; m++) {
             if (capitalPendiente <= 0) {
                 rows.push({
-                    num: m,
+                    num: m + numOffset,
                     year, month,
                     label: mesLabel(year, month),
-                    cuota: 0,
-                    intereses: 0,
-                    capital: 0,
-                    pendiente: 0,
+                    cuota: 0, intereses: 0, capital: 0, pendiente: 0,
                     pctPagado: 100,
                     isSaved: true,
                     isPaid: false
@@ -227,7 +278,7 @@ const Amort = (() => {
                 continue;
             }
 
-            // Determine interest for THIS month
+            // Tipo de interés de este mes
             let interesAnualMes = interesFijo;
             if (tipo === 'variable') {
                 const yyyymm = `${year}-${month.toString().padStart(2, '0')}`;
@@ -242,7 +293,6 @@ const Amort = (() => {
             }
 
             if (interesAnualMes !== lastInteresAnual) {
-                // Recompute the quota for the remaining periods
                 lastInteresAnual = interesAnualMes;
                 i = Math.max(0, lastInteresAnual / 100 / 12);
                 let remainingPeriods = n - m + 1;
@@ -257,12 +307,12 @@ const Amort = (() => {
             }
 
             const interesesMes = i <= 0 ? 0 : Math.round(capitalPendiente * i * 100) / 100;
-            let cuotaMes = cuotaMensual;
+            let cuotaMes   = cuotaMensual;
             let capitalMes = cuotaMes - interesesMes;
 
             // Ajuste última cuota
             if (m === n || (capitalPendiente + interesesMes) <= cuotaMensual) {
-                cuotaMes = Math.round((capitalPendiente + interesesMes) * 100) / 100;
+                cuotaMes   = Math.round((capitalPendiente + interesesMes) * 100) / 100;
                 capitalMes = capitalPendiente;
             }
 
@@ -270,33 +320,26 @@ const Amort = (() => {
             if (capitalPendiente < 0) capitalPendiente = 0;
 
             totalInteresesAcum += interesesMes;
-            totalCapitalAcum += capitalMes;
+            totalCapitalAcum   += capitalMes;
 
             let extraInfo = null;
 
             // ===== CHECK EXTRA AMORTIZACIÓN EN ESTA CUOTA =====
-            const extra = _amortizacionesExtra[m];
+            const extra = _amortizacionesExtra[m + numOffset];
             if (extra && capitalPendiente > 0) {
-                let extraCapital = Math.min(extra.importe, capitalPendiente); // no sobre-amortizar
+                let extraCapital = Math.min(extra.importe, capitalPendiente);
 
-                // Calcular comisión: 2% primeros 10 años, 1.5% años 11-20, 0% después
                 let pctComision = 0;
-                if (m <= 120) pctComision = 0.02;
-                else if (m <= 240) pctComision = 0.015;
-                else pctComision = 0;
+                if (m <= 120)       pctComision = 0.02;
+                else if (m <= 240)  pctComision = 0.015;
 
                 let comisionExtra = Math.round((extraCapital * pctComision) * 100) / 100;
 
-                capitalPendiente = Math.round((capitalPendiente - extraCapital) * 100) / 100;
+                capitalPendiente  = Math.round((capitalPendiente - extraCapital) * 100) / 100;
                 totalCapitalAcum += extraCapital;
 
-                extraInfo = {
-                    importe: extraCapital,
-                    comision: comisionExtra,
-                    tipo: extra.tipo
-                };
+                extraInfo = { importe: extraCapital, comision: comisionExtra, tipo: extra.tipo };
 
-                // Recalcular cuota si elige 'cuota' (mantener plazo)
                 if (extra.tipo === 'cuota' && capitalPendiente > 0) {
                     let remainingPeriods = n - m;
                     if (remainingPeriods > 0) {
@@ -310,12 +353,12 @@ const Amort = (() => {
                 }
             }
 
-            const isPaid = (todayY > year) || 
-                           (todayY === year && todayM > month) || 
+            const isPaid = (todayY > year) ||
+                           (todayY === year && todayM > month) ||
                            (todayY === year && todayM === month && isLastDay);
 
             rows.push({
-                num: m,
+                num: m + numOffset,
                 year, month,
                 label: mesLabel(year, month),
                 cuota: cuotaMes,
@@ -324,7 +367,7 @@ const Amort = (() => {
                 pendiente: capitalPendiente,
                 pctPagado: ((V - capitalPendiente) / V) * 100,
                 totalInteresesAcum: Math.round(totalInteresesAcum * 100) / 100,
-                totalCapitalAcum: Math.round(totalCapitalAcum * 100) / 100,
+                totalCapitalAcum:   Math.round(totalCapitalAcum   * 100) / 100,
                 extra: extraInfo,
                 isVariableStart: (tipo === 'mixta' && m === (aniosFijo * 12 + 1)),
                 isPaid
@@ -345,31 +388,29 @@ const Amort = (() => {
         const interesFijo = parseFloat(document.getElementById('amort-interes')?.value) || 0;
         const diferencial = parseFloat(document.getElementById('amort-diferencial')?.value) || 0;
         const aniosFijo = parseInt(document.getElementById('amort-anios-fijo')?.value, 10) || 0;
-        const fechaEl = document.getElementById('amort-fecha')?.value; // "YYYY-MM"
+        const fechaEl = document.getElementById('amort-fecha')?.value; // "YYYY-MM-DD"
 
-        saveInputs();  // persistir siempre que el usuario escribe o cambia algo
+        saveInputs();
 
         // Basic validation
-        if (!capital || !plazo || capital <= 0 || plazo <= 0) {
-            _hideAll();
-            return;
-        }
-        if (tipo === 'fija' && interesFijo < 0) { _hideAll(); return; }
+        if (!capital || !plazo || capital <= 0 || plazo <= 0) { _hideAll(); return; }
+        if (tipo === 'fija'  && interesFijo < 0)                { _hideAll(); return; }
         if (tipo === 'mixta' && (interesFijo < 0 || aniosFijo <= 0)) { _hideAll(); return; }
 
-        let firstYear, firstMonth;
+        let firstYear, firstMonth, signingDay = 1;
         if (fechaEl) {
             const parts = fechaEl.split('-');
-            firstYear = parseInt(parts[0], 10);
+            firstYear  = parseInt(parts[0], 10);
             firstMonth = parseInt(parts[1], 10);
+            signingDay = parts[2] ? parseInt(parts[2], 10) : 1;
         } else {
-            // Forzar fecha de test a Abril 2026 si no hay nada introducido, para visualizar una cuota pagada
-            firstYear = 2026;
+            // Valor por defecto para visualizar al menos una cuota pagada
+            firstYear  = 2026;
             firstMonth = 4;
-            _setField('amort-fecha', '2026-04');
+            _setField('amort-fecha', '2026-04-01');
         }
 
-        _cuadro = buildCuadro(capital, plazo, firstYear, firstMonth, tipo, interesFijo, diferencial, aniosFijo);
+        _cuadro = buildCuadro(capital, plazo, firstYear, firstMonth, tipo, interesFijo, diferencial, aniosFijo, signingDay);
         if (_cuadro.length === 0) { _hideAll(); return; }
 
         const totalIntereses = _cuadro.reduce((s, r) => s + r.intereses, 0);
@@ -383,7 +424,7 @@ const Amort = (() => {
         // Calcular contra caso base sin amortizaciones extra
         const oldExtras = _amortizacionesExtra;
         _amortizacionesExtra = {};
-        const cuadroBase = buildCuadro(capital, plazo, firstYear, firstMonth, tipo, interesFijo, diferencial, aniosFijo);
+        const cuadroBase = buildCuadro(capital, plazo, firstYear, firstMonth, tipo, interesFijo, diferencial, aniosFijo, signingDay);
         _amortizacionesExtra = oldExtras;
 
         const totalInteresesBase = cuadroBase.reduce((s, r) => s + r.intereses, 0);
@@ -394,7 +435,16 @@ const Amort = (() => {
 
         // Resumen
         _show('amort-summary');
-        document.getElementById('amort-sum-cuota').textContent = fmt(_cuadro[0].cuota);
+        // Cuota regular = la primera fila que NO sea el período parcial
+        const firstRegular = _cuadro.find(r => !r.isBrokenPeriod);
+        const cuotaNormal  = firstRegular ? firstRegular.cuota : _cuadro[0].cuota;
+        const hasBroken    = _cuadro.some(r => r.isBrokenPeriod);
+        const elCuota      = document.getElementById('amort-sum-cuota');
+        if (hasBroken) {
+            elCuota.innerHTML = `${fmt(cuotaNormal)} <br><small style="color:#f59e0b; font-weight:600; font-size:0.75rem;">(1ª cuota parcial: ${fmt(_cuadro[0].cuota)})</small>`;
+        } else {
+            elCuota.textContent = fmt(cuotaNormal);
+        }
         
         const elInt = document.getElementById('amort-sum-intereses');
         const fmtInt = fmt(Math.round(totalIntereses * 100) / 100);
@@ -522,6 +572,35 @@ const Amort = (() => {
                     <td colspan="4" style="text-align:center; font-size:0.85rem; font-style:italic;">Cuota ahorrada</td>
                     <td class="amort-td-pct">
                         <span class="amort-pct-label">100.0 %</span>
+                    </td>
+                    <td class="amort-td-extra"></td>
+                </tr>`;
+            }
+
+            // ─── Fila período parcial inicial ───
+            if (r.isBrokenPeriod) {
+                const paidHtml = r.isPaid
+                    ? `<span class="amort-paid-check" title="Cuota pagada"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>`
+                    : '';
+                return `<tr class="amort-row ${r.isPaid ? 'is-paid' : ''}" style="background: rgba(245,158,11,0.05);">
+                    <td class="amort-td-num">
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            ${r.num} ${paidHtml}
+                        </div>
+                    </td>
+                    <td class="amort-td-fecha">${r.label}</td>
+                    <td class="amort-td-cuota">
+                        ${fmt(r.cuota)}
+                        <br><span style="font-size:0.7rem; color:#f59e0b; font-weight:600;">Cuota parcial</span>
+                    </td>
+                    <td class="amort-td-int">${fmt(r.intereses)}</td>
+                    <td class="amort-td-cap"><span style="color:var(--text-muted); font-size:0.85rem;">0,00 €</span></td>
+                    <td class="amort-td-pend">${fmt(r.pendiente)}</td>
+                    <td class="amort-td-pct">
+                        <div class="amort-pct-wrap">
+                            <div class="amort-pct-bar" style="width:0%;background:#ef4444;"></div>
+                            <span class="amort-pct-label">0,0 %</span>
+                        </div>
                     </td>
                     <td class="amort-td-extra"></td>
                 </tr>`;
