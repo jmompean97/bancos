@@ -271,11 +271,16 @@
 
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label" for="amort-tipo">Tipo de hipoteca</label>
-                    <select class="form-input" id="amort-tipo" onchange="Amort.changeTipo()">
-                        <option value="fija">Fija</option>
-                        <option value="variable">Variable</option>
-                        <option value="mixta">Mixta</option>
-                    </select>
+                    <div class="select-wrapper">
+                        <select class="form-input" id="amort-tipo" onchange="Amort.changeTipo()">
+                            <option value="fija">Fija</option>
+                            <option value="variable">Variable</option>
+                            <option value="mixta">Mixta</option>
+                        </select>
+                        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
                 </div>
                 <div class="amort-form-grid">
                     <div class="form-group">
