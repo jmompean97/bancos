@@ -294,12 +294,14 @@
                             <span class="info-icon" tabindex="0" role="tooltip"
                                 aria-label="Si firmaste a mitad de mes, la 1ª cuota se calcula proporcional automáticamente"
                                 onclick="this.classList.toggle('open')">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="8" x2="12" y2="8.01"/>
-                                    <path d="M12 12v4"/>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="8.01" />
+                                    <path d="M12 12v4" />
                                 </svg>
-                                <span class="info-popup">Si firmaste a mitad de mes, la 1ª cuota se calcula proporcional automáticamente (intereses de los días restantes del mes de firma)</span>
+                                <span class="info-popup">Si firmaste a mitad de mes, la 1ª cuota se calcula proporcional
+                                    automáticamente (intereses de los días restantes del mes de firma)</span>
                             </span>
                         </label>
                         <input class="form-input" type="date" id="amort-fecha" oninput="Amort.calcular()" />
@@ -321,8 +323,11 @@
                             min="0" oninput="Amort.calcular()" />
                     </div>
                     <div class="form-group" id="grp-amort-euribor" style="display:none;">
-                        <label class="form-label">Euribor actual <span style="font-size:0.7rem;opacity:0.7;font-weight:normal" id="euribor-date"></span></label>
-                        <div class="form-input" style="background:var(--bg-secondary);display:flex;align-items:center;padding:0.5rem 0.75rem;">
+                        <label class="form-label">Euribor actual <span
+                                style="font-size:0.7rem;opacity:0.7;font-weight:normal"
+                                id="euribor-date"></span></label>
+                        <div class="form-input"
+                            style="background:var(--bg-secondary);display:flex;align-items:center;padding:0.5rem 0.75rem;">
                             <span id="amort-euribor-val" style="font-weight:600;">Cargando...</span>
                         </div>
                     </div>
@@ -339,7 +344,7 @@
                         <span class="amort-summary-value accent-orange" id="amort-sum-intereses">—</span>
                     </div>
                     <div class="amort-summary-card">
-                        <span class="amort-summary-label">Total pagado</span>
+                        <span class="amort-summary-label">Total a pagar</span>
                         <span class="amort-summary-value" id="amort-sum-total">—</span>
                     </div>
                     <div class="amort-summary-card">
@@ -884,7 +889,7 @@
     <script src="js/amort.js"></script>
     <script>
         // Close any open info-icon tooltip when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!e.target.closest('.info-icon')) {
                 document.querySelectorAll('.info-icon.open').forEach(el => el.classList.remove('open'));
             }
