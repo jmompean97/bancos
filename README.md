@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🏦 BancoComp
+# 🏠 MiHipoteca
 
-### Comparador de hipotecas inteligente
+### Compara bancos · Calcula cuotas · Amortiza mes a mes
 
-**Compara condiciones hipotecarias de múltiples bancos de forma visual, rápida y sin perder tus datos.**
+**La herramienta completa para tomar decisiones hipotecarias: compara condiciones entre bancos y visualiza tu cuadro de amortización completo.**
 
 [![HTML](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/es/docs/Web/HTML)
 [![CSS](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/es/docs/Web/CSS)
@@ -16,11 +16,14 @@
 
 ---
 
-## ✨ ¿Qué es BancoComp?
+## ✨ ¿Qué es MiHipoteca?
 
 Cuando pides una hipoteca, cada banco te da una oferta diferente con cientos de variables: tipos de interés, cuotas mensuales, gastos de formalización, bonificaciones por contratar seguros... **compararlo a mano en papel o Excel es un caos.**
 
-**BancoComp** es una app web que te permite introducir las condiciones de cada banco, previsualizar todos los datos en tarjetas y generar automáticamente una **tabla comparativa completa** donde los mejores valores aparecen en verde y los peores en rojo — de un vistazo.
+**MiHipoteca** es una app web con dos módulos principales:
+
+1. **Comparador de bancos** — Introduce las condiciones de cada banco y genera automáticamente una **tabla comparativa completa** donde los mejores valores aparecen en verde y los peores en rojo.
+2. **Calculadora de amortización** — Introduce las condiciones definitivas de tu hipoteca y obtén el **cuadro de amortización mes a mes** (método francés), con simulación de aportaciones anticipadas, Euríbor real del BCE y gráficos interactivos.
 
 Sin registro. Sin servidor. Sin instalar nada. Abre el archivo y listo.
 
@@ -61,23 +64,23 @@ cd bancos
 
 ## 🎯 Funcionalidades
 
-### 🏠 Tipos de hipoteca soportados
+### 📊 Comparador de bancos
+
+#### 🏠 Tipos de hipoteca soportados
 
 - **Hipoteca Fija** — Bonificada y No Bonificada
   - % Interés, cuota mensual, total a pagar
   - Comisiones de amortización anticipada (tramos 0-10 años y resto)
-- **Hipoteca Variable** (¡Novedad!)
+- **Hipoteca Variable**
   - Cálculo dinámico basado en Diferencial + Euríbor.
   - Histórico de cuotas pasadas con el Euríbor real del mes.
-- **Hipoteca Mixta** (¡Novedad!)
+- **Hipoteca Mixta**
   - Tramo fijo inicial configurable y tramo variable posterior.
   - Indicador visual en la tabla para marcar el cambio de tramo.
 
 **Condiciones dinámicas por banco**: personaliza el plazo hipotecario y el % de financiación. El importe financiado se calcula automáticamente sobre el valor de compraventa/tasación del inmueble.
 
-
-
-### 💸 Otros gastos asociados
+#### 💸 Otros gastos asociados
 
 | Gasto | Descripción |
 |---|---|
@@ -90,18 +93,18 @@ cd bancos
 | Otros extras | Gastos adicionales personalizados |
 
 > 🧮 El total de otros gastos se calcula automáticamente en tiempo real.
-> ✅ **Gastos "Pagados"**: puedes marcar cualquier gasto como ya pagado mediante un checkbox para excluirlo  automáticamente del total a pagar pendiente.
+> ✅ **Gastos "Pagados"**: puedes marcar cualquier gasto como ya pagado mediante un checkbox para excluirlo automáticamente del total a pagar pendiente.
 
-### ⭐ Bonificaciones
+#### ⭐ Bonificaciones
 
-Algunos bancos reducen el tipo de interés si contratas productos vinculados. BancoComp te permite registrar:
+Algunos bancos reducen el tipo de interés si contratas productos vinculados. MiHipoteca te permite registrar:
 
 - ✅ **Domiciliar nómina** — reducción en % y coste (normalmente sin coste)
 - ✅ **Seguro de vida** — reducción en % y coste anual
 - ✅ **Seguro de hogar** — reducción en % y coste anual
 - ✅ **Tarjeta de crédito** — reducción en % y coste anual
 
-### 📊 Tabla comparativa automática
+#### 📋 Tabla comparativa automática
 
 La tabla se genera al instante y destaca:
 
@@ -109,11 +112,15 @@ La tabla se genera al instante y destaca:
 - 🔴 **Rojo** → Peor valor entre todos los bancos
 - **—** → Dato no introducido (no penaliza)
 
-### 📉 Módulo de Amortización (NUEVO)
+---
+
+### 📉 Módulo de Amortización
 
 Una sección dedicada para calcular y simular tu hipoteca mes a mes con el **método francés**:
-- **Integración con API del BCE**: Sincronización automática con los datos oficiales del Banco Central Europeo para obtener el Euríbor a 1 año actualizado diariamente.
-- **Cálculo con Euríbor Histórico**: Recupera la media mensual del Euríbor de cada mes para calcular cuotas pasadas con precisión quirúrgica.
+
+- **Fecha de firma con período parcial automático**: si firmaste a mitad de mes, la primera cuota se calcula proporcionalmente (intereses de los días reales desde la firma hasta fin de mes).
+- **Integración con API del BCE**: Sincronización automática con los datos oficiales del Banco Central Europeo para obtener el Euríbor a 1 año actualizado.
+- **Cálculo con Euríbor Histórico**: Recupera la media mensual del Euríbor de cada mes para calcular cuotas pasadas con precisión.
 - **Simulador de amortización anticipada**: añade aportaciones extra de capital indicando el mes, importe y si deseas reducir cuota o reducir plazo.
 - **Cálculo de comisiones automático**: calcula los costes que cobra el banco por amortizar anticipadamente.
 - **Visualizador de cambio de tramo**: En hipotecas mixtas, la tabla resalta exactamente cuándo termina el interés fijo y empieza el variable.
@@ -124,9 +131,9 @@ Una sección dedicada para calcular y simular tu hipoteca mes a mes con el **mé
 
 ## 💾 Persistencia de datos
 
-BancoComp **no usa `localStorage`**. Utiliza **IndexedDB**, la base de datos nativa del navegador:
+MiHipoteca **no usa `localStorage`** para los datos del comparador. Utiliza **IndexedDB**, la base de datos nativa del navegador:
 
-| Característica | localStorage | IndexedDB (BancoComp) |
+| Característica | localStorage | IndexedDB (MiHipoteca) |
 |---|---|---|
 | Almacenamiento | ~5 MB | Cientos de MB |
 | API | Síncrona | Asíncrona (no bloquea UI) |
@@ -140,7 +147,7 @@ BancoComp **no usa `localStorage`**. Utiliza **IndexedDB**, la base de datos nat
 Para **portabilidad y backup**:
 
 - **⬆️ Importar** — Carga una sesión previa desde un archivo `.json`
-- **⬇️ Exportar** — Descarga `bancocomp-YYYY-MM-DD.json` con todos tus datos
+- **⬇️ Exportar** — Descarga `mihipoteca-YYYY-MM-DD.json` con todos tus datos
 - **🗑️ Reset** — Borra todos los datos (con confirmación)
 
 El formato JSON exportado es legible y puede editarse manualmente si es necesario.
@@ -206,6 +213,7 @@ https://jmompean97.github.io/bancos/
 - [x] **Sincronización via GitHub Gist** — guarda el JSON en un Gist privado tuyo y sincroniza automáticamente usando tu Personal Access Token
 - [x] **Calculadora de cuota y Amortización** — calcula la cuota mensual automáticamente, y visualiza la amortización mes a mes y amortizaciones extra.
 - [x] **Modo comparación visual con gráficos** — gráfico dinámico y responsivo con Chart.js para ver la amortización.
+- [x] **Cuota parcial por firma a mitad de mes** — cálculo automático proporcional de la primera cuota según el día de firma.
 - [ ] **Ahorro real con bonificaciones** — calcula si compensa contratar cada producto vinculado (reducción de interés vs coste anual del seguro)
 - [ ] **Compartir via URL** — codifica el estado en la URL para compartir tu comparativa sin exportar ficheros
 
@@ -231,10 +239,10 @@ Distribuido bajo licencia **MIT**. Consulta el archivo [LICENSE](LICENSE) para m
 
 <div align="center">
 
-&copy; 2026 **[Jorge Mompeán](https://github.com/jmompean97)**. Todos los derechos reservados.
+&copy; 2026 **[Jorge Mompeán Cabezas](https://www.linkedin.com/in/jorgemompean/)**. Todos los derechos reservados.
 
 Hecho con ☕ y muchas horas comparando hipotecas para la comunidad.
 
-**[⬆ Volver arriba](#-bancocomp)**
+**[⬆ Volver arriba](#-mihipoteca)**
 
 </div>
