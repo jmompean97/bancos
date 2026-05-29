@@ -438,13 +438,7 @@ const Amort = (() => {
         // Cuota regular = la primera fila que NO sea el período parcial
         const firstRegular = _cuadro.find(r => !r.isBrokenPeriod);
         const cuotaNormal  = firstRegular ? firstRegular.cuota : _cuadro[0].cuota;
-        const hasBroken    = _cuadro.some(r => r.isBrokenPeriod);
-        const elCuota      = document.getElementById('amort-sum-cuota');
-        if (hasBroken) {
-            elCuota.innerHTML = `${fmt(cuotaNormal)} <br><small style="color:#f59e0b; font-weight:600; font-size:0.75rem;">(1ª cuota parcial: ${fmt(_cuadro[0].cuota)})</small>`;
-        } else {
-            elCuota.textContent = fmt(cuotaNormal);
-        }
+        document.getElementById('amort-sum-cuota').textContent = fmt(cuotaNormal);
         
         const elInt = document.getElementById('amort-sum-intereses');
         const fmtInt = fmt(Math.round(totalIntereses * 100) / 100);
